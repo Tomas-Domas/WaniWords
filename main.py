@@ -1,7 +1,8 @@
 import requests
 import json
 
-CONFIG_FILE = "config.json"
+from config import WANIKANI_API_TOKEN, JPDB_API_TOKEN
+
 DATA_CACHE_FILE = "Data_Cache.json"
 FREQUENCY_LIST_FILE = "Frequency_List.json"
 FREQ_SOURCE_FILE = "BCCWJ_frequencylist_suw_ver1_0.tsv"
@@ -52,7 +53,7 @@ def download_all_kanji_subjects(data_cache_json: dict[str, dict]) -> None:
     """
     :param data_cache_json: Object to cache the WaniKani Kanji Subjects
     """
-    kanji_subjects_list = get_data_array_from_api(
+    kanji_subjects_list = get_data_from_wanikani_api(
         endpoint="subjects",
         parameters={
             "types": "kanji"
@@ -69,7 +70,7 @@ def download_all_vocabulary_subjects(data_cache_json: dict[str, dict]) -> None:
     """
     :param data_cache_json: Object to cache the WaniKani Vocabulary Subjects
     """
-    vocabulary_subjects_list = get_data_array_from_api(
+    vocabulary_subjects_list = get_data_from_wanikani_api(
         endpoint="subjects",
         parameters={
             "types": "vocabulary,kana_vocabulary"
@@ -86,7 +87,7 @@ def download_user_kanji_assignments(data_cache_json: dict[str, dict]) -> None:
     """
     :param data_cache_json: Object to cache the User's Kanji Assignments
     """
-    kanji_assignments_list = get_data_array_from_api(
+    kanji_assignments_list = get_data_from_wanikani_api(
         endpoint="assignments",
         parameters={
             "subject_types": "kanji",
@@ -104,7 +105,7 @@ def download_user_vocabulary_assignments(data_cache_json: dict[str, dict]) -> No
     """
     :param data_cache_json: Object to cache the User's Vocabulary Assignments
     """
-    vocabulary_assignments_list = get_data_array_from_api(
+    vocabulary_assignments_list = get_data_from_wanikani_api(
         endpoint="assignments",
         parameters={
             "subject_types": "vocabulary,kana_vocabulary",
@@ -206,7 +207,7 @@ def filter_out_known_vocabulary(candidate_words_list: list[str], known_vocabular
             filtered_candidate_words_list.append(word)
     return filtered_candidate_words_list
 
-def get_data_array_from_api(endpoint: str, parameters: dict[str, str]) -> list[dict]:
+def get_data_from_wanikani_api(endpoint: str, parameters: dict[str, str]) -> list[dict]:
     """
     :param endpoint: URL endpoint for the API request
     :param parameters: Parameters and Filters for the API request
@@ -216,7 +217,7 @@ def get_data_array_from_api(endpoint: str, parameters: dict[str, str]) -> list[d
         method="GET",
         url="https://api.wanikani.com/v2/" + endpoint,
         headers={
-            "Authorization": "Bearer " + API_TOKEN
+            "Authorization": "Bearer " + WANIKANI_API_TOKEN
         },
         params=parameters
     ).json()
@@ -232,7 +233,7 @@ def get_data_array_from_api(endpoint: str, parameters: dict[str, str]) -> list[d
                 method="GET",
                 url=next_page,
                 headers={
-                    "Authorization": "Bearer " + API_TOKEN
+                    "Authorization": "Bearer " + WANIKANI_API_TOKEN
                 }
             ).json()
 

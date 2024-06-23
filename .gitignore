@@ -1,8 +1,3 @@
 /BCCWJ_frequencylist_suw_ver1_0.tsv
-/.idea/misc.xml
-/.idea/modules.xml
-/.idea/inspectionProfiles/profiles_settings.xml
-/.idea/inspectionProfiles/Project_Default.xml
-/.idea/vcs.xml
-/.idea/WaniKotoba.iml
-/.idea/workspace.xml
+/config.py
+/.idea/
