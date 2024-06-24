@@ -45,6 +45,7 @@ class WaniKaniHandler:
         self.download_wanikani_kanji()
         self.download_user_known_vocabulary()
         self.download_user_known_kanji()
+        self.write_cache()
 
     def download_wanikani_kanji(self) -> None:
         """
