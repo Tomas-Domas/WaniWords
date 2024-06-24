@@ -1,9 +1,8 @@
-import requests
 import json
+from wanikani import WaniKaniHandler
 
 from config import WANIKANI_API_TOKEN, JPDB_API_TOKEN
 
-DATA_CACHE_FILE = "Data_Cache.json"
 FREQUENCY_LIST_FILE = "Frequency_List.json"
 FREQ_SOURCE_FILE = "BCCWJ_frequencylist_suw_ver1_0.tsv"
 BLACKLISTED_WORD_TYPES = ["助詞", "助動詞", "接尾辞", "数詞"]
@@ -24,100 +23,17 @@ def main():
     # === Regenerate Frequency List File
     # generate_frequency_list()
 
-    # USE TO UPDATE THE CACHED WK_Kanji.json FILE
-    with open(DATA_CACHE_FILE, "r", encoding='utf-8') as data_cache_file:
-        data_cache_json = json.load(data_cache_file)
-
-    # === Update cached WK Subjects and User Assignments
-    # download_all_kanji_subjects(data_cache_json)
-    # download_all_vocabulary_subjects(data_cache_json)
-    # download_user_kanji_assignments(data_cache_json)
-    # download_user_vocabulary_assignments(data_cache_json)
-    with open(DATA_CACHE_FILE, "w", encoding='utf-8') as data_cache_file:
-        json.dump(
-            data_cache_json,
-            data_cache_file,
-            indent=3,
-            ensure_ascii=False
-        )
+    wanikanihandler = WaniKaniHandler(WANIKANI_API_TOKEN)
+    wanikanihandler.download_all_data()
+    wanikanihandler.write_cache()
 
     known_kanji_list = get_known_kanji_list(data_cache_json)
     known_vocabulary_list = get_known_vocabulary_list(data_cache_json)
 
-    candidate_words_list = get_candidate_words_list(known_kanji_list, 5000)
-    print("Generated list of %d candidate words:\n" % len(candidate_words_list) + str(candidate_words_list))
-    filtered_words_list = filter_out_known_vocabulary(candidate_words_list, known_vocabulary_list)
-    print("Generated list of %d filtered words:\n" % len(filtered_words_list) + str(filtered_words_list))
-
-def download_all_kanji_subjects(data_cache_json: dict[str, dict]) -> None:
-    """
-    :param data_cache_json: Object to cache the WaniKani Kanji Subjects
-    """
-    kanji_subjects_list = get_data_from_wanikani_api(
-        endpoint="subjects",
-        parameters={
-            "types": "kanji"
-        }
-    )
-    id_to_kanji_dictionary = {}
-    for kanji in kanji_subjects_list:
-        id_to_kanji_dictionary[kanji["id"]] = kanji["data"]["characters"]
-
-    data_cache_json["all_kanji_subjects"] = id_to_kanji_dictionary
-    print("Wanikani Kanji Subjects have been updated")
-
-def download_all_vocabulary_subjects(data_cache_json: dict[str, dict]) -> None:
-    """
-    :param data_cache_json: Object to cache the WaniKani Vocabulary Subjects
-    """
-    vocabulary_subjects_list = get_data_from_wanikani_api(
-        endpoint="subjects",
-        parameters={
-            "types": "vocabulary,kana_vocabulary"
-        }
-    )
-    id_to_vocabulary_dictionary = {}
-    for vocabulary in vocabulary_subjects_list:
-        id_to_vocabulary_dictionary[vocabulary["id"]] = vocabulary["data"]["characters"]
-
-    data_cache_json["all_vocabulary_subjects"] = id_to_vocabulary_dictionary
-    print("Wanikani Vocabulary Subjects have been updated")
-
-def download_user_kanji_assignments(data_cache_json: dict[str, dict]) -> None:
-    """
-    :param data_cache_json: Object to cache the User's Kanji Assignments
-    """
-    kanji_assignments_list = get_data_from_wanikani_api(
-        endpoint="assignments",
-        parameters={
-            "subject_types": "kanji",
-            "srs_stages": "5,6,7,8,9"
-        }
-    )
-    id_to_srs_dictionary = {}
-    for kanji in kanji_assignments_list:
-        id_to_srs_dictionary[kanji["data"]["subject_id"]] = kanji["data"]["srs_stage"]
-
-    data_cache_json["user_kanji_assignments"] = id_to_srs_dictionary
-    print("User Kanji Assignments have been updated")
-
-def download_user_vocabulary_assignments(data_cache_json: dict[str, dict]) -> None:
-    """
-    :param data_cache_json: Object to cache the User's Vocabulary Assignments
-    """
-    vocabulary_assignments_list = get_data_from_wanikani_api(
-        endpoint="assignments",
-        parameters={
-            "subject_types": "vocabulary,kana_vocabulary",
-            "srs_stages": "1,2,3,4,5,6,7,8,9"
-        }
-    )
-    id_to_srs_dictionary = {}
-    for vocabulary in vocabulary_assignments_list:
-        id_to_srs_dictionary[vocabulary["data"]["subject_id"]] = vocabulary["data"]["srs_stage"]
-
-    data_cache_json["user_vocabulary_assignments"] = id_to_srs_dictionary
-    print("User Vocabulary Assignments have been updated")
+    # candidate_words_list = get_candidate_words_list(known_kanji_list, 5000)
+    # print("Generated list of %d candidate words:\n" % len(candidate_words_list) + str(candidate_words_list))
+    # filtered_words_list = filter_out_known_vocabulary(candidate_words_list, known_vocabulary_list)
+    # print("Generated list of %d filtered words:\n" % len(filtered_words_list) + str(filtered_words_list))
 
 def generate_frequency_list() -> None:
     """
@@ -207,37 +123,6 @@ def filter_out_known_vocabulary(candidate_words_list: list[str], known_vocabular
             filtered_candidate_words_list.append(word)
     return filtered_candidate_words_list
 
-def get_data_from_wanikani_api(endpoint: str, parameters: dict[str, str]) -> list[dict]:
-    """
-    :param endpoint: URL endpoint for the API request
-    :param parameters: Parameters and Filters for the API request
-    :return: JSON objects received from the request. Handles pagination by combining all returned pages
-    """
-    response = requests.request(
-        method="GET",
-        url="https://api.wanikani.com/v2/" + endpoint,
-        headers={
-            "Authorization": "Bearer " + WANIKANI_API_TOKEN
-        },
-        params=parameters
-    ).json()
-
-    data_array = []
-    while True:
-        data_array += response["data"]
-        next_page = response["pages"]["next_url"]
-        if next_page is None:
-            break
-        else:
-            response = requests.request(
-                method="GET",
-                url=next_page,
-                headers={
-                    "Authorization": "Bearer " + WANIKANI_API_TOKEN
-                }
-            ).json()
-
-    return data_array
 
 if __name__ == "__main__":
     main()
