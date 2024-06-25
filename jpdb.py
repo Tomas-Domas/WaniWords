@@ -1,4 +1,3 @@
-import json
 import requests
 
 
@@ -22,8 +21,8 @@ class JPDBHandler:
                 "text": text[:-1],
                 "token_fields": [],
                 "vocabulary_fields": [
-                    "vid",
-                    "sid"
+                    "vid",  # Vocabulary ID
+                    "sid"   # Spelling ID - refers to alternative spellings of a single Vocabulary item
                 ]
             }
         ).json()
@@ -33,7 +32,6 @@ class JPDBHandler:
             vids.append(word_data[0])
             sids.append(word_data[1])
 
-        vids = [word_data[0] for word_data in vocabulary_ids_json["vocabulary"]]
         return vids, sids
 
 
