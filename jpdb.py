@@ -85,7 +85,7 @@ class JPDBHandler:
         ).json())
 
 
-    def add_vocabulary_to_deck(self, words_list):
+    def add_vocabulary_to_waniwords_deck(self, words_list):
         deck_names_list, deck_ids_list = self._get_decks_list()
         for i in range(len(deck_names_list)):
             if deck_names_list[i] == "WaniWords":
