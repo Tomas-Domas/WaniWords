@@ -67,7 +67,7 @@ def filter_out_known_words(list_of_words: list[str], wanikani_handler: WaniKaniH
     known_vocabulary = wanikani_handler.get_known_vocabulary_list()
     new_list_of_words = []
     for word in list_of_words:
-        if bool(word not in known_vocabulary) ^ invert_filter:
+        if bool(word not in known_vocabulary) ^ invert_filter:  # Flip comparison if invert_filter
             new_list_of_words.append(word)
     return new_list_of_words
 
@@ -94,6 +94,6 @@ def filter_out_unknown_kanji(list_of_words: list[str], wanikani_handler: WaniKan
                 if character not in known_characters:
                     break
             else:
-                continue
+                continue  # Continue to the outer loop to skip appending
             new_list_of_words.append(word)
     return new_list_of_words

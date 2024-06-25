@@ -6,7 +6,8 @@ WANIKANI_CACHE_FILE = "WaniKani_Cache.json"
 class WaniKaniHandler:
     def __init__(self, api_token):
         """
-        Creates a handler object with data from the cache file
+        Creates a WaniKaniHandler that interfaces with the WaniKani API and takes care of the user's data.
+        Takes data from the cache file.
         :param api_token: the user's WaniKani API Token. Only needs read permissions
         """
         self._api_token = api_token
