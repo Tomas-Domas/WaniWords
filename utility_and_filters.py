@@ -20,7 +20,7 @@ _KANA_LIST = [
 def generate_frequency_list_file() -> None:
     """
     Generate a Frequency List file from the BCCWJ database file
-    Filters out words that are categorized as any of the Blacklisted Types
+    Excludes words that fall under a Blacklisted type
     """
     with open(_FREQUENCY_LIST_FILE, "w") as frequency_list_file:
         list_of_words = []
@@ -42,11 +42,11 @@ def generate_frequency_list_file() -> None:
             indent=0
         )
 
-def get_common_words_list(num_of_words: int) -> list[str]:
+def generate_frequent_words(num_of_words: int) -> list[str]:
     """
     Generate a list of words from the frequency list file
     :param num_of_words: The number of words to retrieve (e.g. 500 = the 500 most common words)
-    :return: List of words sorted by frequency according to the frequency list file
+    :return: List of words in frequency order from the frequency list file
     """
     with open(_FREQUENCY_LIST_FILE, "r", encoding='utf-8') as frequency_list_file:
         words_list = json.load(frequency_list_file)
@@ -62,7 +62,7 @@ def filter_out_known_words(list_of_words: list[str], wanikani_handler: WaniKaniH
     :param list_of_words: list of words to be filtered
     :param wanikani_handler: WaniKaniHandler for the user
     :param invert_filter: whether the filter should be inverted (i.e. filter out unknown words)
-    :return: new, filtered list of words
+    :return: list of words that passed the filter
     """
     known_vocabulary = wanikani_handler.get_known_vocabulary_list()
     new_list_of_words = []
@@ -77,7 +77,7 @@ def filter_out_unknown_kanji(list_of_words: list[str], wanikani_handler: WaniKan
     :param list_of_words: list of words to be filtered
     :param wanikani_handler: WaniKaniHandler for the user
     :param invert_filter: whether the filter should be inverted (i.e. filter out words of only known kanji)
-    :return: new, filtered list of words
+    :return: list of words that passed the filter
     """
     known_characters = _KANA_LIST + wanikani_handler.get_known_kanji_list()
     new_list_of_words = []
