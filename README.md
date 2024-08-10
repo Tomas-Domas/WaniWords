@@ -1,11 +1,9 @@
 
 # WaniWords (wip title)
 
-This project aims to help WaniKani learners to better take advantage of the kanji they have learned through the website. It allows users to find and study commonly used words that aren't covered in WaniKani. 
-
-Due to the way WaniKani is structured, it is often the case that a user will learn a new kanji, but only one or two words that make use of that kanji. This project seeks to solve that problem. By finding commonly-used, high-value words, and further filtering for those that contain only known kanji, the user can get a list of "low-hanging fruit" (WaniWords?). These are words that are very easy for the user to learn and are also very useful to know since they are encountered often.
+This project is designed for WaniKani users to maximize their kanji learning by discovering commonly used words that WaniKani doesn't cover. Often, WaniKani introduces a kanji with only a few associated words, leaving gaps in vocabulary. This project identifies commonly used words made up of kanji the user already knows, providing a list of easily learnable, high-value words. This way, users can efficiently expand their vocabulary by focusing on these "low-hanging fruit."
 ## Features
 
-- Pulling user data from WaniKani's public API
-- Generating lists of commonly used words, and filtering them with various criteria (e.g. words of known kanji that haven't been learned through WaniKani)
-- (WIP) Generate study decks on websites like JPDB or Anki from generated lists of words
+- Load user's learning data from WaniKani
+- Create lists of words, filtered with various criteria
+- Generate a vocabulary deck on the website jpdb.io for learning
