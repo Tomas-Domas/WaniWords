@@ -1,5 +1,6 @@
 import requests
 
+_WANIWORDS_DECK_NAME = "WaniWordsTest"
 
 class JPDBHandler:
     def __init__(self, api_token):
@@ -32,7 +33,7 @@ class JPDBHandler:
         return vocabulary_ids_dictionary["vocabulary"]
 
 
-    def _get_decks_list(self) -> tuple[list, list]:
+    def _get_decks(self) -> tuple[list, list]:
         decks_dictionary = requests.request(
             method="POST",
             url="https://jpdb.io/api/v1/list-user-decks",
@@ -63,52 +64,38 @@ class JPDBHandler:
                 "Authorization": "Bearer " + self._api_token
             },
             json={
-                "name": "WaniWords",
+                "name": _WANIWORDS_DECK_NAME,
                 "position": deck_position
             }
         ).json()
         return deck_json["id"]
 
 
-    def _add_vocabulary_ids_waniwords_deck(self, waniwords_deck_id: int, ids_list: list[list]) -> None:
-        print(requests.request(
+    def _add_vocabulary_to_deck(self, deck_id: int, vocabulary_ids_list: list[list]) -> None:
+        requests.request(
             method="POST",
             url="https://jpdb.io/api/v1/deck/add-vocabulary",
             headers={
                 "Authorization": "Bearer " + self._api_token
             },
             json={
-                "id": waniwords_deck_id,
-                "vocabulary": ids_list,
+                "id": deck_id,
+                "vocabulary": vocabulary_ids_list,
                 "replace_existing_occurences": True,
             }
-        ).json())
+        ).json()
 
 
     def add_vocabulary_to_waniwords_deck(self, words_list):
-        deck_names_list, deck_ids_list = self._get_decks_list()
-        for i in range(len(deck_names_list)):
-            if deck_names_list[i] == "WaniWords":
-                print("Existing WaniWords deck found!")
-                waniwords_deck_id = deck_ids_list[i]
-                break
-        else:
-            print("WaniWords deck NOT found! Creating Deck...")
-            waniwords_deck_id = self._create_waniwords_deck(len(deck_names_list))
+        deck_names_list, deck_ids_list = self._get_decks()
 
-        ids_list = self._get_vocabulary_ids(words_list)
-        self._add_vocabulary_ids_waniwords_deck(waniwords_deck_id, ids_list)
+        try:
+            waniwords_deck_index = deck_names_list.index(_WANIWORDS_DECK_NAME)
+            waniwords_deck_id = deck_ids_list[waniwords_deck_index]
+            print("Existing %s deck found!" % _WANIWORDS_DECK_NAME)
+        except ValueError:
+            print("Existing %s deck NOT found! Creating Deck..." % _WANIWORDS_DECK_NAME)
+            waniwords_deck_id = self._create_waniwords_deck(len(deck_names_list)) 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+        vocabulary_ids_list = self._get_vocabulary_ids(words_list)
+        self._add_vocabulary_to_deck(waniwords_deck_id, vocabulary_ids_list)
