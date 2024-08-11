@@ -9,10 +9,11 @@ def main():
     jpdb_handler = JPDBHandler(JPDB_API_TOKEN)
     # print("Generating Frequency List file from database...")
     # utility_and_filters.generate_frequency_list_file()  # Regenerate file from the database
-    # print("Downloading WaniKani user data...")
-    # wk_handler.download_all_data()  # Download data from wanikani and write to cache file
 
-    NUM_OF_WORDS = 500
+    print("Downloading WaniKani user data...")
+    wk_handler.download_all_data()  # Download data from wanikani and write to cache file
+
+    NUM_OF_WORDS = 1000
     print("Generating word list of size %d..." % NUM_OF_WORDS)
     words_list = utility_and_filters.generate_frequent_words(NUM_OF_WORDS)
 

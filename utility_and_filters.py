@@ -17,6 +17,7 @@ _KANA_LIST = [
     'ヰ', 'ヸ', 'ヱ', 'ヹ', 'ヲ', 'ヺ', 'ン', '・', 'ー'
 ]
 
+
 def generate_frequency_list_file() -> None:
     """
     Generate a Frequency List file from the BCCWJ database file
@@ -42,6 +43,7 @@ def generate_frequency_list_file() -> None:
             indent=0
         )
 
+
 def generate_frequent_words(num_of_words: int) -> list[str]:
     """
     Generate a list of words from the frequency list file
@@ -55,6 +57,7 @@ def generate_frequent_words(num_of_words: int) -> list[str]:
             return words_list
         else:
             return words_list[0:num_of_words]
+
 
 def filter_out_known_words(list_of_words: list[str], wanikani_handler: WaniKaniHandler, invert_filter: bool = False) -> list[str]:
     """
@@ -70,6 +73,7 @@ def filter_out_known_words(list_of_words: list[str], wanikani_handler: WaniKaniH
         if bool(word not in known_vocabulary) ^ invert_filter:  # Flip comparison if invert_filter
             new_list_of_words.append(word)
     return new_list_of_words
+
 
 def filter_out_unknown_kanji(list_of_words: list[str], wanikani_handler: WaniKaniHandler, invert_filter: bool = False) -> list[str]:
     """
