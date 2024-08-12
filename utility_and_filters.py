@@ -2,6 +2,7 @@ import json
 
 from wanikani import WaniKaniHandler
 
+_CONFIG_FILE = "config.json"
 _FREQUENCY_LIST_FILE = "Frequency_List.json"
 _FREQ_SOURCE_FILE = "BCCWJ_frequencylist_suw_ver1_0.tsv"
 _BLACKLISTED_WORD_TYPES = ["助詞", "助動詞", "接尾辞", "数詞", "固有名詞"]
@@ -42,6 +43,40 @@ def generate_frequency_list_file() -> None:
             frequency_list_file,
             indent=0
         )
+    
+
+def get_api_keys() -> dict:
+    try:
+        config_file = open(_CONFIG_FILE, "r", encoding='utf-8')
+        api_keys_dict = json.load(config_file)
+        if ("wanikani" not in api_keys_dict) or ("jpdb" not in api_keys_dict):
+            raise json.decoder.JSONDecodeError
+
+    except FileNotFoundError:
+        print("Creating new config file...")
+        config_file = open(_CONFIG_FILE, "x", encoding='utf-8')
+        api_keys_dict = {
+            "wanikani": input("Enter WaniKani API key: "),
+            "jpdb":     input("Enter JPDB API key: ")
+        }
+
+    except json.decoder.JSONDecodeError:
+        print("Error getting API Keys from config file.")
+        api_keys_dict = {
+            "wanikani": input("Enter WaniKani API key: "),
+            "jpdb":     input("Enter JPDB API key: ")
+        }
+
+    finally:
+        config_file.close()
+        with open(_CONFIG_FILE, "w", encoding='utf-8') as config_file:
+            json.dump(
+                api_keys_dict,
+                config_file,
+                indent=3,
+                ensure_ascii=False
+            )
+        return api_keys_dict
 
 
 def generate_frequent_words(num_of_words: int) -> list[str]:

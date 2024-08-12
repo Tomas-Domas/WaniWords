@@ -1,12 +1,14 @@
 import utility_and_filters
 from wanikani import WaniKaniHandler
 from jpdb import JPDBHandler
-from config import WANIKANI_API_TOKEN, JPDB_API_TOKEN
 
 
 def main():
-    wk_handler = WaniKaniHandler(WANIKANI_API_TOKEN)
-    jpdb_handler = JPDBHandler(JPDB_API_TOKEN)
+
+    api_keys = utility_and_filters.get_api_keys()
+
+    wk_handler = WaniKaniHandler(api_keys["wanikani"])
+    jpdb_handler = JPDBHandler(api_keys["jpdb"])
 
     # print("Generating Frequency List file from database...")
     # utility_and_filters.generate_frequency_list_file()  # Regenerate file from the database

@@ -1,1 +1,3 @@
 *.pyc
+config.json
+WaniKani_Cache.json
