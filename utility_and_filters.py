@@ -75,16 +75,21 @@ def filter_out_known_words(list_of_words: list[str], wanikani_handler: WaniKaniH
     return new_list_of_words
 
 
-def filter_out_unknown_kanji(list_of_words: list[str], wanikani_handler: WaniKaniHandler, invert_filter: bool = False) -> list[str]:
+def filter_out_unknown_symbols(list_of_words: list[str], wanikani_handler: WaniKaniHandler, invert_filter: bool = False) -> list[str]:
     """
-    Removes words from the list that contain kanji not yet learned through WaniKani
+    Removes words from the list that contain symbols not yet learned through WaniKani.
+    Filters out kana-only words if WaniKaniHandler is None.
     :param list_of_words: list of words to be filtered
     :param wanikani_handler: WaniKaniHandler for the user
     :param invert_filter: whether the filter should be inverted (i.e. filter out words of only known kanji)
     :return: list of words that passed the filter
     """
-    known_characters = _KANA_LIST + wanikani_handler.get_known_kanji_list()
     new_list_of_words = []
+    if wanikani_handler is None:
+        known_characters = _KANA_LIST
+    else:
+        known_characters = _KANA_LIST + wanikani_handler.get_known_kanji_list()
+
     if invert_filter is False:
         for word in list_of_words:
             for character in word:
@@ -92,6 +97,7 @@ def filter_out_unknown_kanji(list_of_words: list[str], wanikani_handler: WaniKan
                     break
             else:
                 new_list_of_words.append(word)
+                
     else:
         for word in list_of_words:
             for character in word:
@@ -100,4 +106,5 @@ def filter_out_unknown_kanji(list_of_words: list[str], wanikani_handler: WaniKan
             else:
                 continue  # Continue to the outer loop to skip appending
             new_list_of_words.append(word)
+            
     return new_list_of_words
