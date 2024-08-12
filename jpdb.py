@@ -1,10 +1,31 @@
 import requests
+import sys
 
-_WANIWORDS_DECK_NAME = "WaniWordsTest"
+_WANIWORDS_DECK_NAME = "WaniWords"
 
 class JPDBHandler:
     def __init__(self, api_token):
         self._api_token = api_token
+
+    def _call_api(self, endpoint: str, json: dict):
+        response_json = requests.request(
+            method="POST",
+            url="https://jpdb.io/api/v1/" + endpoint,
+            headers={
+                "Authorization": "Bearer " + self._api_token
+            },
+            json=json,
+        ).json()
+
+        if "error" in response_json:
+            match response_json["error"]:
+                case "bad_key":
+                    print("JPDB API Error! JPDB API Key is invalid.")
+                case _:
+                    print("JPDB API Error! Error Message: %s." % response_json["error_message"])
+            sys.exit(1)
+
+        return response_json
 
 
     def _get_vocabulary_ids(self, vocabulary_list: list[str]) -> list[list]:
@@ -13,13 +34,8 @@ class JPDBHandler:
         for word in vocabulary_list:
             text += word + "\n"
 
-
-        vocabulary_ids_dictionary = requests.request(
-            method="POST",
-            url="https://jpdb.io/api/v1/parse",
-            headers={
-                "Authorization": "Bearer " + self._api_token
-            },
+        vocabulary_ids_dictionary = self._call_api(
+            endpoint="parse",
             json={
                 "text": text[:-1],
                 "token_fields": [],
@@ -28,25 +44,21 @@ class JPDBHandler:
                     "sid"   # Spelling ID - refers to alternative spellings of a single Vocabulary item
                 ]
             }
-        ).json()
+        )
 
         return vocabulary_ids_dictionary["vocabulary"]
 
 
     def _get_decks(self) -> tuple[list, list]:
-        decks_dictionary = requests.request(
-            method="POST",
-            url="https://jpdb.io/api/v1/list-user-decks",
-            headers={
-                "Authorization": "Bearer " + self._api_token
-            },
+        decks_dictionary = self._call_api(
+            endpoint="list-user-decks",
             json={
                 "fields": [
                     "name",
                     "id"
                 ]
             }
-        ).json()
+        )
         deck_names_list = []
         deck_ids_list = []
         for deck_data in decks_dictionary["decks"]:
@@ -57,33 +69,25 @@ class JPDBHandler:
 
 
     def _create_waniwords_deck(self, deck_position: int = 0) -> int:
-        deck_json = requests.request(
-            method="POST",
-            url="https://jpdb.io/api/v1/deck/create-empty",
-            headers={
-                "Authorization": "Bearer " + self._api_token
-            },
+        deck_dictionary = self._call_api(
+            endpoint="deck/create-empty",
             json={
                 "name": _WANIWORDS_DECK_NAME,
                 "position": deck_position
             }
-        ).json()
-        return deck_json["id"]
+        )
+        return deck_dictionary["id"]
 
 
     def _add_vocabulary_to_deck(self, deck_id: int, vocabulary_ids_list: list[list]) -> None:
-        requests.request(
-            method="POST",
-            url="https://jpdb.io/api/v1/deck/add-vocabulary",
-            headers={
-                "Authorization": "Bearer " + self._api_token
-            },
+        self._call_api(
+            endpoint="deck/add-vocabulary",
             json={
                 "id": deck_id,
                 "vocabulary": vocabulary_ids_list,
                 "replace_existing_occurences": True,
             }
-        ).json()
+        )
 
 
     def add_vocabulary_to_waniwords_deck(self, words_list):

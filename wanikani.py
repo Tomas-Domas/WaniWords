@@ -1,7 +1,8 @@
 import json
 import requests
+import sys
 
-WANIKANI_CACHE_FILE = "WaniKani_Cache.json"
+_WANIKANI_CACHE_FILE = "WaniKani_Cache.json"
 
 class WaniKaniHandler:
     def __init__(self, api_token):
@@ -11,10 +12,21 @@ class WaniKaniHandler:
         :param api_token: the user's WaniKani API Token. Only needs read permissions
         """
         self._api_token = api_token
-        with open(WANIKANI_CACHE_FILE, "r", encoding='utf-8') as cache_file:
+        try:
+            cache_file = open(_WANIKANI_CACHE_FILE, "r", encoding='utf-8')
             self._data_dictionary = json.load(cache_file)
+        except FileNotFoundError:
+            print("Creating new cache file...")
+            cache_file = open(_WANIKANI_CACHE_FILE, "x", encoding='utf-8')
+            self._data_dictionary = {}
+        except json.decoder.JSONDecodeError:
+            print("Error decoding cache file. Ignoring cache contents.")
+            self._data_dictionary = {}
+        finally:
+            cache_file.close()
 
-    def _get_data_from_api(self, endpoint: str, parameters: dict[str, str]) -> list[dict]:
+
+    def _call_api(self, endpoint: str, parameters: dict[str, str]) -> list[dict]:
         """
         Wrapper for calling the WaniKani API. Packages the received data into a list
         :param endpoint: URL endpoint for the API request
@@ -23,6 +35,7 @@ class WaniKaniHandler:
         """
         data_array = []
         next_page = "https://api.wanikani.com/v2/" + endpoint
+
         while next_page is not None:
             response_json = requests.request(
                 method="GET",
@@ -32,29 +45,41 @@ class WaniKaniHandler:
                 },
                 params=parameters
             ).json()
-            data_array += response_json["data"]
-            parameters = None
-            next_page = response_json["pages"]["next_url"]
+            try:
+                data_array += response_json["data"]
+                parameters = None
+                next_page = response_json["pages"]["next_url"]
+            except KeyError:
+                response_code = response_json["code"]
+                match response_code:
+                    case 401:
+                        print("WaniKani API Error! WaniKani API Key is invalid.")
+                    case _:
+                        print("WaniKani API Error! Response Code: %d." % response_code)
+                sys.exit(1)
+
         return data_array
+
 
     def download_all_data(self) -> None:
         """
         Downloads the subjects and assignments for both vocabulary and kanji.
         Writes the downloaded data to the cache file
         """
-        self.download_wanikani_vocabulary()
-        self.download_wanikani_kanji()
-        self.download_user_known_vocabulary()
-        self.download_user_known_kanji()
-        self.write_cache()
+        self._download_wanikani_vocabulary()
+        self._download_wanikani_kanji()
+        self._download_user_known_vocabulary()
+        self._download_user_known_kanji()
 
-    def download_wanikani_kanji(self) -> None:
+        self._write_cache()
+
+
+    def _download_wanikani_kanji(self) -> None:
         """
         Downloads all the WaniKani kanji subjects.
         Stored in a dictionary as a (subject_id : kanji_string) pair
-        Does not write the downloaded data to the cache file. For this, use write_cache()
         """
-        kanji_subjects_list = self._get_data_from_api(
+        kanji_subjects_list = self._call_api(
             endpoint="subjects",
             parameters={
                 "types": "kanji"
@@ -67,13 +92,13 @@ class WaniKaniHandler:
         self._data_dictionary["all_kanji_subjects"] = id_to_kanji_dictionary
         print("Wanikani Kanji Subjects have been updated")
 
-    def download_wanikani_vocabulary(self) -> None:
+
+    def _download_wanikani_vocabulary(self) -> None:
         """
         Downloads all the WaniKani vocabulary subjects
         Stored in a dictionary as a (subject_id : vocabulary_string) pair
-        Does not write the downloaded data to the cache file. For this, use write_cache()
         """
-        vocabulary_subjects_list = self._get_data_from_api(
+        vocabulary_subjects_list = self._call_api(
             endpoint="subjects",
             parameters={
                 "types": "vocabulary,kana_vocabulary"
@@ -86,13 +111,13 @@ class WaniKaniHandler:
         self._data_dictionary["all_vocabulary_subjects"] = id_to_vocabulary_dictionary
         print("Wanikani Vocabulary Subjects have been updated")
 
-    def download_user_known_kanji(self) -> None:
+
+    def _download_user_known_kanji(self) -> None:
         """
         Downloads user's kanji assignments that are Guru level or higher
         Stored in a dictionary as a (subject_id : srs_stage) pair
-        Does not write the downloaded data to the cache file. For this, use write_cache()
         """
-        kanji_assignments_list = self._get_data_from_api(
+        kanji_assignments_list = self._call_api(
             endpoint="assignments",
             parameters={
                 "subject_types": "kanji",
@@ -106,13 +131,13 @@ class WaniKaniHandler:
         self._data_dictionary["user_kanji_assignments"] = id_to_srs_dictionary
         print("User Kanji Assignments have been updated")
 
-    def download_user_known_vocabulary(self) -> None:
+
+    def _download_user_known_vocabulary(self) -> None:
         """
         Downloads user's vocabulary assignments that are Apprentice level or higher
         Stored in a dictionary as a (subject_id : srs_stage) pair
-        Does not write the downloaded data to the cache file. For this, use write_cache()
         """
-        vocabulary_assignments_list = self._get_data_from_api(
+        vocabulary_assignments_list = self._call_api(
             endpoint="assignments",
             parameters={
                 "subject_types": "vocabulary,kana_vocabulary",
@@ -126,17 +151,19 @@ class WaniKaniHandler:
         self._data_dictionary["user_vocabulary_assignments"] = id_to_srs_dictionary
         print("User Vocabulary Assignments have been updated")
 
-    def write_cache(self) -> None:
+
+    def _write_cache(self) -> None:
         """
         Writes the currently held data to the cache file
         """
-        with open(WANIKANI_CACHE_FILE, "w", encoding='utf-8') as cache_file:
+        with open(_WANIKANI_CACHE_FILE, "w", encoding='utf-8') as cache_file:
             json.dump(
                 self._data_dictionary,
                 cache_file,
                 indent=3,
                 ensure_ascii=False
             )
+
 
     def get_known_kanji_list(self) -> list[str]:
         """
@@ -147,6 +174,7 @@ class WaniKaniHandler:
         for lesson_id in self._data_dictionary["user_kanji_assignments"]:
             known_kanji_list.append(self._data_dictionary["all_kanji_subjects"][lesson_id])
         return known_kanji_list
+
 
     def get_known_vocabulary_list(self) -> list[str]:
         """
