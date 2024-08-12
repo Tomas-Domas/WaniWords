@@ -2,6 +2,8 @@ import json
 import requests
 import sys
 
+from waniwords_utility import remove_key_from_config, KANA_LIST
+
 _WANIKANI_CACHE_FILE = "WaniKani_Cache.json"
 
 class WaniKaniHandler:
@@ -54,6 +56,7 @@ class WaniKaniHandler:
                 match response_code:
                     case 401:
                         print("WaniKani API Error! WaniKani API Key is invalid.")
+                        remove_key_from_config("wanikani")
                     case _:
                         print("WaniKani API Error! Response Code: %d." % response_code)
                 sys.exit(1)
@@ -66,10 +69,10 @@ class WaniKaniHandler:
         Downloads the subjects and assignments for both vocabulary and kanji.
         Writes the downloaded data to the cache file
         """
-        self._download_wanikani_vocabulary()
-        self._download_wanikani_kanji()
-        self._download_user_known_vocabulary()
         self._download_user_known_kanji()
+        self._download_user_known_vocabulary()
+        self._download_wanikani_kanji()
+        self._download_wanikani_vocabulary()
 
         self._write_cache()
 
@@ -185,3 +188,49 @@ class WaniKaniHandler:
         for lesson_id in self._data_dictionary["user_vocabulary_assignments"]:
             known_vocabulary_list.append(self._data_dictionary["all_vocabulary_subjects"][lesson_id])
         return known_vocabulary_list
+
+
+    def filter_out_known_words(self, list_of_words: list[str], invert_filter: bool = False) -> list[str]:
+        """
+        Removes words from the list that were learned through WaniKani
+        :param list_of_words: list of words to be filtered
+        :param invert_filter: whether the filter should be inverted (i.e. filter out unknown words)
+        :return: list of words that passed the filter
+        """
+        known_vocabulary = self.get_known_vocabulary_list()
+        new_list_of_words = []
+        for word in list_of_words:
+            if bool(word not in known_vocabulary) ^ invert_filter:  # Flip comparison if invert_filter
+                new_list_of_words.append(word)
+        return new_list_of_words
+
+
+    def filter_out_unknown_kanji(self, list_of_words: list[str], invert_filter: bool = False) -> list[str]:
+        """
+        Removes words from the list that contain kanji not yet learned through WaniKani.
+        Filters out kana-only words if WaniKaniHandler is None.
+        :param list_of_words: list of words to be filtered
+        :param invert_filter: whether the filter should be inverted (i.e. filter out words of only known kanji)
+        :return: list of words that passed the filter
+        """
+        new_list_of_words = []
+        known_characters = KANA_LIST + self.get_known_kanji_list()
+
+        if invert_filter is False:
+            for word in list_of_words:
+                for character in word:
+                    if character not in known_characters:
+                        break
+                else:
+                    new_list_of_words.append(word)
+                    
+        else:
+            for word in list_of_words:
+                for character in word:
+                    if character not in known_characters:
+                        break
+                else:
+                    continue  # Continue to the outer loop to skip appending
+                new_list_of_words.append(word)
+                
+        return new_list_of_words

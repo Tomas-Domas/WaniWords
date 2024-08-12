@@ -1,12 +1,6 @@
 import json
 
-from wanikani import WaniKaniHandler
-
-_CONFIG_FILE = "config.json"
-_FREQUENCY_LIST_FILE = "Frequency_List.json"
-_FREQ_SOURCE_FILE = "BCCWJ_frequencylist_suw_ver1_0.tsv"
-_BLACKLISTED_WORD_TYPES = ["助詞", "助動詞", "接尾辞", "数詞", "固有名詞"]
-_KANA_LIST = [
+KANA_LIST = [
     'ぁ', 'あ', 'ぃ', 'い', 'ぅ', 'う', 'ゔ', 'ぇ', 'え', 'ぉ', 'お', 'ゕ', 'か', 'が', 'き', 'ぎ', 'く', 'ぐ', 'ゖ', 'け', 'げ',
     'こ', 'ご', 'さ', 'ざ', 'し', 'じ', 'す', 'ず', 'せ', 'ぜ', 'そ', 'ぞ', 'た', 'だ', 'ち', 'ぢ', 'っ', 'つ', 'づ', 'て', 'で',
     'と', 'ど', 'な', 'に', 'ぬ', 'ね', 'の', 'は', 'ば', 'ぱ', 'ひ', 'び', 'ぴ', 'ふ', 'ぶ', 'ぷ', 'へ', 'べ', 'ぺ', 'ほ', 'ぼ',
@@ -17,6 +11,10 @@ _KANA_LIST = [
     'ボ', 'ポ', 'マ', 'ミ', 'ム', 'メ', 'モ', 'ャ', 'ヤ', 'ュ', 'ユ', 'ョ', 'ヨ', 'ラ', 'リ', 'ル', 'レ', 'ロ', 'ヮ', 'ワ', 'ヷ',
     'ヰ', 'ヸ', 'ヱ', 'ヹ', 'ヲ', 'ヺ', 'ン', '・', 'ー'
 ]
+_BLACKLISTED_WORD_TYPES = ["助詞", "助動詞", "接尾辞", "数詞", "固有名詞"]
+_CONFIG_FILE = "config.json"
+_FREQUENCY_LIST_FILE = "Frequency_List.json"
+_FREQ_SOURCE_FILE = "BCCWJ_frequencylist_suw_ver1_0.tsv"
 
 
 def generate_frequency_list_file() -> None:
@@ -46,37 +44,62 @@ def generate_frequency_list_file() -> None:
     
 
 def get_api_keys() -> dict:
+    api_keys_dict = {}
     try:
-        config_file = open(_CONFIG_FILE, "r", encoding='utf-8')
+        config_file = open(_CONFIG_FILE, "r+", encoding='utf-8')
         api_keys_dict = json.load(config_file)
-        if ("wanikani" not in api_keys_dict) or ("jpdb" not in api_keys_dict):
-            raise json.decoder.JSONDecodeError
+        if ("wanikani" not in api_keys_dict) and ("jpdb" not in api_keys_dict):
+            raise KeyError("wanikani", "jpdb")
+        if "wanikani" not in api_keys_dict:
+            raise KeyError("wanikani")
+        if "jpdb" not in api_keys_dict:
+            raise KeyError("jpdb")
+
+    except KeyError as key_error:
+        for missing_key in key_error.args:
+            print("Missing %s key from config..." % missing_key)
+            api_keys_dict[missing_key] = input("Enter %s API key: " % missing_key)
 
     except FileNotFoundError:
         print("Creating new config file...")
         config_file = open(_CONFIG_FILE, "x", encoding='utf-8')
         api_keys_dict = {
-            "wanikani": input("Enter WaniKani API key: "),
-            "jpdb":     input("Enter JPDB API key: ")
+            "wanikani": input("Enter wanikani API key: "),
+            "jpdb":     input("Enter jpdb API key: ")
         }
 
     except json.decoder.JSONDecodeError:
-        print("Error getting API Keys from config file.")
+        print("Error decoding config file...")
         api_keys_dict = {
-            "wanikani": input("Enter WaniKani API key: "),
-            "jpdb":     input("Enter JPDB API key: ")
+            "wanikani": input("Enter wanikani API key: "),
+            "jpdb":     input("Enter jpdb API key: ")
         }
 
     finally:
+        config_file.seek(0)
+        config_file.truncate()
+        json.dump(
+            api_keys_dict,
+            config_file,
+            indent=3,
+            ensure_ascii=False
+        )
         config_file.close()
-        with open(_CONFIG_FILE, "w", encoding='utf-8') as config_file:
-            json.dump(
-                api_keys_dict,
-                config_file,
-                indent=3,
-                ensure_ascii=False
-            )
         return api_keys_dict
+
+
+def remove_key_from_config(key: str):
+    with open(_CONFIG_FILE, "r+", encoding='utf-8') as config_file:
+        api_keys_dict = json.load(config_file)
+        del api_keys_dict[key]
+        config_file.seek(0)
+        config_file.truncate()
+        json.dump(
+            api_keys_dict,
+            config_file,
+            indent=3,
+            ensure_ascii=False
+        )
 
 
 def generate_frequent_words(num_of_words: int) -> list[str]:
@@ -92,54 +115,3 @@ def generate_frequent_words(num_of_words: int) -> list[str]:
             return words_list
         else:
             return words_list[0:num_of_words]
-
-
-def filter_out_known_words(list_of_words: list[str], wanikani_handler: WaniKaniHandler, invert_filter: bool = False) -> list[str]:
-    """
-    Removes words from the list that were learned through WaniKani
-    :param list_of_words: list of words to be filtered
-    :param wanikani_handler: WaniKaniHandler for the user
-    :param invert_filter: whether the filter should be inverted (i.e. filter out unknown words)
-    :return: list of words that passed the filter
-    """
-    known_vocabulary = wanikani_handler.get_known_vocabulary_list()
-    new_list_of_words = []
-    for word in list_of_words:
-        if bool(word not in known_vocabulary) ^ invert_filter:  # Flip comparison if invert_filter
-            new_list_of_words.append(word)
-    return new_list_of_words
-
-
-def filter_out_unknown_symbols(list_of_words: list[str], wanikani_handler: WaniKaniHandler, invert_filter: bool = False) -> list[str]:
-    """
-    Removes words from the list that contain symbols not yet learned through WaniKani.
-    Filters out kana-only words if WaniKaniHandler is None.
-    :param list_of_words: list of words to be filtered
-    :param wanikani_handler: WaniKaniHandler for the user
-    :param invert_filter: whether the filter should be inverted (i.e. filter out words of only known kanji)
-    :return: list of words that passed the filter
-    """
-    new_list_of_words = []
-    if wanikani_handler is None:
-        known_characters = _KANA_LIST
-    else:
-        known_characters = _KANA_LIST + wanikani_handler.get_known_kanji_list()
-
-    if invert_filter is False:
-        for word in list_of_words:
-            for character in word:
-                if character not in known_characters:
-                    break
-            else:
-                new_list_of_words.append(word)
-                
-    else:
-        for word in list_of_words:
-            for character in word:
-                if character not in known_characters:
-                    break
-            else:
-                continue  # Continue to the outer loop to skip appending
-            new_list_of_words.append(word)
-            
-    return new_list_of_words
