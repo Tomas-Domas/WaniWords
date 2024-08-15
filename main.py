@@ -29,8 +29,7 @@ def main():
 
         if checkbox_variable_list[2].get() == True:
             print("Filtering out kana-only words...", end="\t")
-            # TODO: implement function
-            # words_list = filter_out_kana_words(words_list)
+            words_list = wk_handler.filter_out_kana_words(words_list)
             print(len(words_list), "words remaining.")
 
         print("Generated list:")
@@ -50,7 +49,7 @@ def main():
     # Window
     window = Tk()
     window.title("WaniWords")
-    window.geometry("500x500")
+    window.geometry("500x400")
 
 
     # API Key widgets

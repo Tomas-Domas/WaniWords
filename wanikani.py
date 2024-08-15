@@ -208,7 +208,6 @@ class WaniKaniHandler:
     def filter_out_unknown_kanji(self, list_of_words: list[str], invert_filter: bool = False) -> list[str]:
         """
         Removes words from the list that contain kanji not yet learned through WaniKani.
-        Filters out kana-only words if WaniKaniHandler is None.
         :param list_of_words: list of words to be filtered
         :param invert_filter: whether the filter should be inverted (i.e. filter out words of only known kanji)
         :return: list of words that passed the filter
@@ -232,5 +231,34 @@ class WaniKaniHandler:
                 else:
                     continue  # Continue to the outer loop to skip appending
                 new_list_of_words.append(word)
+                
+        return new_list_of_words
+    
+    def filter_out_kana_words(self, list_of_words: list[str], invert_filter: bool = False) -> list[str]:
+        """
+        Removes words from the list that contain kana-only words.
+        :param list_of_words: list of words to be filtered
+        :param invert_filter: whether the filter should be inverted (i.e. filter out words with kanji)
+        :return: list of words that passed the filter
+        """
+        new_list_of_words = []
+        known_characters = KANA_LIST
+
+        if invert_filter is False:
+            for word in list_of_words:
+                for character in word:
+                    if character not in known_characters:
+                        break
+                else:
+                    continue  # Continue to the outer loop to skip appending
+                new_list_of_words.append(word)
+                
+        else:
+            for word in list_of_words:
+                for character in word:
+                    if character not in known_characters:
+                        break
+                else:
+                    new_list_of_words.append(word)
                 
         return new_list_of_words
