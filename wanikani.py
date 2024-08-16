@@ -1,8 +1,8 @@
-import json
-import requests
-import sys
+from sys import exit
+from json import load, dump, decoder
+from requests import request
 
-from waniwords_utility import remove_key_from_config, KANA_LIST
+from waniwords_utility import remove_key_from_config, get_time, KANA_LIST
 
 _WANIKANI_CACHE_FILE = "WaniKani_Cache.json"
 
@@ -16,12 +16,12 @@ class WaniKaniHandler:
         self._api_token = api_token
         try:
             cache_file = open(_WANIKANI_CACHE_FILE, "r", encoding='utf-8')
-            self._data_dictionary = json.load(cache_file)
+            self._data_dictionary = load(cache_file)
         except FileNotFoundError:
             print("Creating new cache file...")
             cache_file = open(_WANIKANI_CACHE_FILE, "x", encoding='utf-8')
             self._data_dictionary = {}
-        except json.decoder.JSONDecodeError:
+        except decoder.JSONDecodeError:
             print("Error decoding cache file. Ignoring cache contents.")
             self._data_dictionary = {}
         finally:
@@ -36,10 +36,10 @@ class WaniKaniHandler:
         :return: List of JSON objects received from the request
         """
         data_array = []
-        next_page = "https://api.wanikani.com/v2/" + endpoint
+        next_page = "https://api.wanikani.com/v2/" + endpoint + "?updated_after=2024-08-16T09%3A24%3A18Z" #TODO generate this time format
 
         while next_page is not None:
-            response_json = requests.request(
+            response_json = request(
                 method="GET",
                 url=next_page,
                 headers={
@@ -59,7 +59,7 @@ class WaniKaniHandler:
                         remove_key_from_config("wanikani")
                     case _:
                         print("WaniKani API Error! Response Code: %d." % response_code)
-                sys.exit(1)
+                exit(1)
 
         return data_array
 
@@ -159,8 +159,9 @@ class WaniKaniHandler:
         """
         Writes the currently held data to the cache file
         """
+        self._data_dictionary["timestamp"] = get_time()
         with open(_WANIKANI_CACHE_FILE, "w", encoding='utf-8') as cache_file:
-            json.dump(
+            dump(
                 self._data_dictionary,
                 cache_file,
                 indent=3,
@@ -190,75 +191,51 @@ class WaniKaniHandler:
         return known_vocabulary_list
 
 
-    def filter_out_known_words(self, list_of_words: list[str], invert_filter: bool = False) -> list[str]:
+    def filter_out_known_words(self, list_of_words: list[str]) -> list[str]:
         """
         Removes words from the list that were learned through WaniKani
         :param list_of_words: list of words to be filtered
-        :param invert_filter: whether the filter should be inverted (i.e. filter out unknown words)
         :return: list of words that passed the filter
         """
         known_vocabulary = self.get_known_vocabulary_list()
         new_list_of_words = []
         for word in list_of_words:
-            if bool(word not in known_vocabulary) ^ invert_filter:  # Flip comparison if invert_filter
+            if word not in known_vocabulary:
                 new_list_of_words.append(word)
         return new_list_of_words
 
 
-    def filter_out_unknown_kanji(self, list_of_words: list[str], invert_filter: bool = False) -> list[str]:
+    def filter_out_unknown_kanji(self, list_of_words: list[str]) -> list[str]:
         """
         Removes words from the list that contain kanji not yet learned through WaniKani.
         :param list_of_words: list of words to be filtered
-        :param invert_filter: whether the filter should be inverted (i.e. filter out words of only known kanji)
         :return: list of words that passed the filter
         """
         new_list_of_words = []
         known_characters = KANA_LIST + self.get_known_kanji_list()
 
-        if invert_filter is False:
-            for word in list_of_words:
-                for character in word:
-                    if character not in known_characters:
-                        break
-                else:
-                    new_list_of_words.append(word)
-                    
-        else:
-            for word in list_of_words:
-                for character in word:
-                    if character not in known_characters:
-                        break
-                else:
-                    continue  # Continue to the outer loop to skip appending
-                new_list_of_words.append(word)
-                
+        for word in list_of_words:
+            for character in word:
+                if character not in known_characters:
+                    break
+            else:
+                new_list_of_words.append(word)    
         return new_list_of_words
     
-    def filter_out_kana_words(self, list_of_words: list[str], invert_filter: bool = False) -> list[str]:
+    def filter_out_kana_words(self, list_of_words: list[str]) -> list[str]:
         """
         Removes words from the list that contain kana-only words.
         :param list_of_words: list of words to be filtered
-        :param invert_filter: whether the filter should be inverted (i.e. filter out words with kanji)
         :return: list of words that passed the filter
         """
         new_list_of_words = []
         known_characters = KANA_LIST
 
-        if invert_filter is False:
-            for word in list_of_words:
-                for character in word:
-                    if character not in known_characters:
-                        break
-                else:
-                    continue  # Continue to the outer loop to skip appending
-                new_list_of_words.append(word)
-                
-        else:
-            for word in list_of_words:
-                for character in word:
-                    if character not in known_characters:
-                        break
-                else:
-                    new_list_of_words.append(word)
-                
+        for word in list_of_words:
+            for character in word:
+                if character not in known_characters:
+                    break
+            else:
+                continue  # Continue to the outer loop to skip appending
+            new_list_of_words.append(word)                
         return new_list_of_words
