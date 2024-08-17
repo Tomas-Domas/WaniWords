@@ -11,5 +11,5 @@ This project is designed for WaniKani users to maximize their kanji learning by 
 
 ## How To Use
 
-Requirements: requests (install using "pip install requests")
-Download source code and run main.py ("python3 main.py")
+- Requirements: requests (install using "pip install requests")
+- Download source code and run main.py ("python3 main.py")
