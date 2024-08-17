@@ -71,10 +71,21 @@ class WaniKaniHandler:
         Downloads the subjects and assignments for both vocabulary and kanji.
         Writes the downloaded data to the cache file
         """
+        print("Downloading User Kanji...", end="\t\t")
         self._download_user_known_kanji()
+        print("Done")
+
+        print("Downloading User Vocabulary...", end="\t\t")
         self._download_user_known_vocabulary()
+        print("Done")
+
+        print("Downloading WaniKani Kanji...", end="\t\t")
         self._download_wanikani_kanji()
+        print("Done")
+
+        print("Downloading WaniKani Vocabulary...", end="\t")
         self._download_wanikani_vocabulary()
+        print("Done")
 
         self._write_cache()
     
@@ -104,7 +115,6 @@ class WaniKaniHandler:
             id_to_kanji_dictionary[id] = kanji["data"]["characters"]
 
         self._update_data_dictionary(key="all_kanji_subjects", new_data=id_to_kanji_dictionary)
-        print("Wanikani Kanji Subjects have been updated")
 
 
     def _download_wanikani_vocabulary(self) -> None:
@@ -124,7 +134,6 @@ class WaniKaniHandler:
             id_to_vocabulary_dictionary[id] = vocabulary["data"]["characters"]
 
         self._update_data_dictionary(key="all_vocabulary_subjects", new_data=id_to_vocabulary_dictionary)
-        print("Wanikani Vocabulary Subjects have been updated")
 
 
     def _download_user_known_kanji(self) -> None:
@@ -144,7 +153,6 @@ class WaniKaniHandler:
             id = str(kanji["data"]["subject_id"])
             id_to_srs_dictionary[id] = kanji["data"]["srs_stage"]
         self._update_data_dictionary(key="user_kanji_assignments", new_data=id_to_srs_dictionary)
-        print("User Kanji Assignments have been updated")
 
 
     def _download_user_known_vocabulary(self) -> None:
@@ -165,7 +173,6 @@ class WaniKaniHandler:
             id_to_srs_dictionary[id] = vocabulary["data"]["srs_stage"]
         
         self._update_data_dictionary(key="user_vocabulary_assignments", new_data=id_to_srs_dictionary)
-        print("User Vocabulary Assignments have been updated")
 
 
     def _write_cache(self) -> None:

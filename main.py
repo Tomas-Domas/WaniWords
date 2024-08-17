@@ -7,7 +7,6 @@ from tkinter import ttk
 
 def main():
 
-    print(get_time())
     api_keys = get_api_keys()
     starting_values = {
         "word_count": 1000,
@@ -20,33 +19,32 @@ def main():
         
         # print("Generating Frequency List file from database...")
         # generate_frequency_list_file()  # Regenerate file from the database
-        print("Downloading WaniKani user data...")
         wk_handler.download_all_data()  # Download data from wanikani and write to cache file
 
-        # words_list = generate_frequent_words(wordcount_int.get())
+        words_list = generate_frequent_words(wordcount_int.get())
 
-        # if checkbox_variable_list[0].get() == True:
-        #     print("Filtering out known words... ", end="\t")
-        #     words_list = wk_handler.filter_out_known_words(words_list)
-        #     print(len(words_list), "words remaining.")
+        if checkbox_variable_list[0].get() == True:
+            print("Filtering out known words... ", end="\t")
+            words_list = wk_handler.filter_out_known_words(words_list)
+            print(len(words_list), "words remaining.")
 
-        # if checkbox_variable_list[1].get() == True:
-        #     print("Filtering out unkown kanji...", end="\t")
-        #     words_list = wk_handler.filter_out_unknown_kanji(words_list)
-        #     print(len(words_list), "words remaining.")
+        if checkbox_variable_list[1].get() == True:
+            print("Filtering out unkown kanji...", end="\t")
+            words_list = wk_handler.filter_out_unknown_kanji(words_list)
+            print(len(words_list), "words remaining.")
 
-        # if checkbox_variable_list[2].get() == True:
-        #     print("Filtering out kana-only words...", end="\t")
-        #     words_list = wk_handler.filter_out_kana_words(words_list)
-        #     print(len(words_list), "words remaining.")
+        if checkbox_variable_list[2].get() == True:
+            print("Filtering out kana-only words...", end="\t")
+            words_list = wk_handler.filter_out_kana_words(words_list)
+            print(len(words_list), "words remaining.")
 
-        # print("Generated list:")
-        # for word in words_list:
-        #     print(word, end=" ")
-        # print()
+        print("Generated list:")
+        for word in words_list:
+            print(word, end="\t")
+        print()
 
-        # # print("Adding words to JPDB deck...")
-        # # jpdb_handler.add_vocabulary_to_waniwords_deck(words_list)
+        print("Adding words to JPDB deck...")
+        jpdb_handler.add_vocabulary_to_waniwords_deck(words_list)
 
         print("Finished!")
 
