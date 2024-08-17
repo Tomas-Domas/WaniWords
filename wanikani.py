@@ -81,7 +81,7 @@ class WaniKaniHandler:
 
     def _update_data_dictionary(self, key, new_data):
         if key in self._data_dictionary:
-            self._data_dictionary[key] = self._data_dictionary[key] | new_data
+            self._data_dictionary[key] |= new_data
         else:
             self._data_dictionary[key] = new_data
 
@@ -100,7 +100,8 @@ class WaniKaniHandler:
         )
         id_to_kanji_dictionary = {}
         for kanji in kanji_subjects_list:
-            id_to_kanji_dictionary[kanji["id"]] = kanji["data"]["characters"]
+            id = str(kanji["id"])
+            id_to_kanji_dictionary[id] = kanji["data"]["characters"]
 
         self._update_data_dictionary(key="all_kanji_subjects", new_data=id_to_kanji_dictionary)
         print("Wanikani Kanji Subjects have been updated")
@@ -119,7 +120,8 @@ class WaniKaniHandler:
         )
         id_to_vocabulary_dictionary = {}
         for vocabulary in vocabulary_subjects_list:
-            id_to_vocabulary_dictionary[vocabulary["id"]] = vocabulary["data"]["characters"]
+            id = str(vocabulary["id"])
+            id_to_vocabulary_dictionary[id] = vocabulary["data"]["characters"]
 
         self._update_data_dictionary(key="all_vocabulary_subjects", new_data=id_to_vocabulary_dictionary)
         print("Wanikani Vocabulary Subjects have been updated")
@@ -139,7 +141,8 @@ class WaniKaniHandler:
         )
         id_to_srs_dictionary = {}
         for kanji in kanji_assignments_list:
-            id_to_srs_dictionary[kanji["data"]["subject_id"]] = kanji["data"]["srs_stage"]
+            id = str(kanji["data"]["subject_id"])
+            id_to_srs_dictionary[id] = kanji["data"]["srs_stage"]
         self._update_data_dictionary(key="user_kanji_assignments", new_data=id_to_srs_dictionary)
         print("User Kanji Assignments have been updated")
 
@@ -158,7 +161,8 @@ class WaniKaniHandler:
         )
         id_to_srs_dictionary = {}
         for vocabulary in vocabulary_assignments_list:
-            id_to_srs_dictionary[vocabulary["data"]["subject_id"]] = vocabulary["data"]["srs_stage"]
+            id = str(vocabulary["data"]["subject_id"])
+            id_to_srs_dictionary[id] = vocabulary["data"]["srs_stage"]
         
         self._update_data_dictionary(key="user_vocabulary_assignments", new_data=id_to_srs_dictionary)
         print("User Vocabulary Assignments have been updated")
@@ -166,7 +170,7 @@ class WaniKaniHandler:
 
     def _write_cache(self) -> None:
         """
-        Writes the currently held data to the cache file
+        Writes the currently held data to the cache file, timestamped
         """
         self._data_dictionary["timestamp"] = get_time()
         with open(_WANIKANI_CACHE_FILE, "w", encoding='utf-8') as cache_file:
