@@ -1,5 +1,5 @@
-import requests
-import sys
+from sys import exit
+from requests import request
 
 from waniwords_utility import remove_key_from_config
 
@@ -10,7 +10,7 @@ class JPDBHandler:
         self._api_token = api_token
 
     def _call_api(self, endpoint: str, json: dict):
-        response_json = requests.request(
+        response_json = request(
             method="POST",
             url="https://jpdb.io/api/v1/" + endpoint,
             headers={
@@ -26,7 +26,7 @@ class JPDBHandler:
                     remove_key_from_config("jpdb")
                 case _:
                     print("JPDB API Error! Error Message: %s." % response_json["error_message"])
-            sys.exit(1)
+            exit(1)
 
         return response_json
 

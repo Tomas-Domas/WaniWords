@@ -1,8 +1,8 @@
-import json
-import requests
-import sys
+from sys import exit
+from json import load, dump, decoder
+from requests import request
 
-from waniwords_utility import remove_key_from_config, KANA_LIST
+from waniwords_utility import remove_key_from_config, get_time, KANA_LIST
 
 _WANIKANI_CACHE_FILE = "WaniKani_Cache.json"
 
@@ -16,12 +16,12 @@ class WaniKaniHandler:
         self._api_token = api_token
         try:
             cache_file = open(_WANIKANI_CACHE_FILE, "r", encoding='utf-8')
-            self._data_dictionary = json.load(cache_file)
+            self._data_dictionary = load(cache_file)
         except FileNotFoundError:
             print("Creating new cache file...")
             cache_file = open(_WANIKANI_CACHE_FILE, "x", encoding='utf-8')
             self._data_dictionary = {}
-        except json.decoder.JSONDecodeError:
+        except decoder.JSONDecodeError:
             print("Error decoding cache file. Ignoring cache contents.")
             self._data_dictionary = {}
         finally:
@@ -37,9 +37,11 @@ class WaniKaniHandler:
         """
         data_array = []
         next_page = "https://api.wanikani.com/v2/" + endpoint
+        if "timestamp" in self._data_dictionary:
+            next_page += "?updated_after=" + self._data_dictionary["timestamp"]
 
         while next_page is not None:
-            response_json = requests.request(
+            response_json = request(
                 method="GET",
                 url=next_page,
                 headers={
@@ -59,7 +61,7 @@ class WaniKaniHandler:
                         remove_key_from_config("wanikani")
                     case _:
                         print("WaniKani API Error! Response Code: %d." % response_code)
-                sys.exit(1)
+                exit(1)
 
         return data_array
 
@@ -69,12 +71,31 @@ class WaniKaniHandler:
         Downloads the subjects and assignments for both vocabulary and kanji.
         Writes the downloaded data to the cache file
         """
+        print("Downloading User Kanji...", end="\t\t")
         self._download_user_known_kanji()
+        print("Done")
+
+        print("Downloading User Vocabulary...", end="\t\t")
         self._download_user_known_vocabulary()
+        print("Done")
+
+        print("Downloading WaniKani Kanji...", end="\t\t")
         self._download_wanikani_kanji()
+        print("Done")
+
+        print("Downloading WaniKani Vocabulary...", end="\t")
         self._download_wanikani_vocabulary()
+        print("Done")
 
         self._write_cache()
+    
+
+    def _update_data_dictionary(self, key, new_data):
+        if key in self._data_dictionary:
+            self._data_dictionary[key] |= new_data
+        else:
+            self._data_dictionary[key] = new_data
+
 
 
     def _download_wanikani_kanji(self) -> None:
@@ -90,10 +111,10 @@ class WaniKaniHandler:
         )
         id_to_kanji_dictionary = {}
         for kanji in kanji_subjects_list:
-            id_to_kanji_dictionary[kanji["id"]] = kanji["data"]["characters"]
+            id = str(kanji["id"])
+            id_to_kanji_dictionary[id] = kanji["data"]["characters"]
 
-        self._data_dictionary["all_kanji_subjects"] = id_to_kanji_dictionary
-        print("Wanikani Kanji Subjects have been updated")
+        self._update_data_dictionary(key="all_kanji_subjects", new_data=id_to_kanji_dictionary)
 
 
     def _download_wanikani_vocabulary(self) -> None:
@@ -109,10 +130,10 @@ class WaniKaniHandler:
         )
         id_to_vocabulary_dictionary = {}
         for vocabulary in vocabulary_subjects_list:
-            id_to_vocabulary_dictionary[vocabulary["id"]] = vocabulary["data"]["characters"]
+            id = str(vocabulary["id"])
+            id_to_vocabulary_dictionary[id] = vocabulary["data"]["characters"]
 
-        self._data_dictionary["all_vocabulary_subjects"] = id_to_vocabulary_dictionary
-        print("Wanikani Vocabulary Subjects have been updated")
+        self._update_data_dictionary(key="all_vocabulary_subjects", new_data=id_to_vocabulary_dictionary)
 
 
     def _download_user_known_kanji(self) -> None:
@@ -129,10 +150,9 @@ class WaniKaniHandler:
         )
         id_to_srs_dictionary = {}
         for kanji in kanji_assignments_list:
-            id_to_srs_dictionary[kanji["data"]["subject_id"]] = kanji["data"]["srs_stage"]
-
-        self._data_dictionary["user_kanji_assignments"] = id_to_srs_dictionary
-        print("User Kanji Assignments have been updated")
+            id = str(kanji["data"]["subject_id"])
+            id_to_srs_dictionary[id] = kanji["data"]["srs_stage"]
+        self._update_data_dictionary(key="user_kanji_assignments", new_data=id_to_srs_dictionary)
 
 
     def _download_user_known_vocabulary(self) -> None:
@@ -149,18 +169,19 @@ class WaniKaniHandler:
         )
         id_to_srs_dictionary = {}
         for vocabulary in vocabulary_assignments_list:
-            id_to_srs_dictionary[vocabulary["data"]["subject_id"]] = vocabulary["data"]["srs_stage"]
-
-        self._data_dictionary["user_vocabulary_assignments"] = id_to_srs_dictionary
-        print("User Vocabulary Assignments have been updated")
+            id = str(vocabulary["data"]["subject_id"])
+            id_to_srs_dictionary[id] = vocabulary["data"]["srs_stage"]
+        
+        self._update_data_dictionary(key="user_vocabulary_assignments", new_data=id_to_srs_dictionary)
 
 
     def _write_cache(self) -> None:
         """
-        Writes the currently held data to the cache file
+        Writes the currently held data to the cache file, timestamped
         """
+        self._data_dictionary["timestamp"] = get_time()
         with open(_WANIKANI_CACHE_FILE, "w", encoding='utf-8') as cache_file:
-            json.dump(
+            dump(
                 self._data_dictionary,
                 cache_file,
                 indent=3,
@@ -190,47 +211,51 @@ class WaniKaniHandler:
         return known_vocabulary_list
 
 
-    def filter_out_known_words(self, list_of_words: list[str], invert_filter: bool = False) -> list[str]:
+    def filter_out_known_words(self, list_of_words: list[str]) -> list[str]:
         """
         Removes words from the list that were learned through WaniKani
         :param list_of_words: list of words to be filtered
-        :param invert_filter: whether the filter should be inverted (i.e. filter out unknown words)
         :return: list of words that passed the filter
         """
         known_vocabulary = self.get_known_vocabulary_list()
         new_list_of_words = []
         for word in list_of_words:
-            if bool(word not in known_vocabulary) ^ invert_filter:  # Flip comparison if invert_filter
+            if word not in known_vocabulary:
                 new_list_of_words.append(word)
         return new_list_of_words
 
 
-    def filter_out_unknown_kanji(self, list_of_words: list[str], invert_filter: bool = False) -> list[str]:
+    def filter_out_unknown_kanji(self, list_of_words: list[str]) -> list[str]:
         """
         Removes words from the list that contain kanji not yet learned through WaniKani.
-        Filters out kana-only words if WaniKaniHandler is None.
         :param list_of_words: list of words to be filtered
-        :param invert_filter: whether the filter should be inverted (i.e. filter out words of only known kanji)
         :return: list of words that passed the filter
         """
         new_list_of_words = []
         known_characters = KANA_LIST + self.get_known_kanji_list()
 
-        if invert_filter is False:
-            for word in list_of_words:
-                for character in word:
-                    if character not in known_characters:
-                        break
-                else:
-                    new_list_of_words.append(word)
-                    
-        else:
-            for word in list_of_words:
-                for character in word:
-                    if character not in known_characters:
-                        break
-                else:
-                    continue  # Continue to the outer loop to skip appending
-                new_list_of_words.append(word)
-                
+        for word in list_of_words:
+            for character in word:
+                if character not in known_characters:
+                    break
+            else:
+                new_list_of_words.append(word)    
+        return new_list_of_words
+    
+    def filter_out_kana_words(self, list_of_words: list[str]) -> list[str]:
+        """
+        Removes words from the list that contain kana-only words.
+        :param list_of_words: list of words to be filtered
+        :return: list of words that passed the filter
+        """
+        new_list_of_words = []
+        known_characters = KANA_LIST
+
+        for word in list_of_words:
+            for character in word:
+                if character not in known_characters:
+                    break
+            else:
+                continue  # Continue to the outer loop to skip appending
+            new_list_of_words.append(word)                
         return new_list_of_words

@@ -1,4 +1,5 @@
-import json
+from json import load, dump, decoder
+from datetime import datetime, timezone
 
 KANA_LIST = [
     'ぁ', 'あ', 'ぃ', 'い', 'ぅ', 'う', 'ゔ', 'ぇ', 'え', 'ぉ', 'お', 'ゕ', 'か', 'が', 'き', 'ぎ', 'く', 'ぐ', 'ゖ', 'け', 'げ',
@@ -36,7 +37,7 @@ def generate_frequency_list_file() -> None:
                         break
                 if not word_is_blacklisted:
                     list_of_words.append(word)
-        json.dump(
+        dump(
             list_of_words[1:],
             frequency_list_file,
             indent=0
@@ -47,7 +48,7 @@ def get_api_keys() -> dict:
     api_keys_dict = {}
     try:
         config_file = open(_CONFIG_FILE, "r+", encoding='utf-8')
-        api_keys_dict = json.load(config_file)
+        api_keys_dict = load(config_file)
         if ("wanikani" not in api_keys_dict) and ("jpdb" not in api_keys_dict):
             raise KeyError("wanikani", "jpdb")
         if "wanikani" not in api_keys_dict:
@@ -68,7 +69,7 @@ def get_api_keys() -> dict:
             "jpdb":     input("Enter jpdb API key: ")
         }
 
-    except json.decoder.JSONDecodeError:
+    except decoder.JSONDecodeError:
         print("Error decoding config file...")
         api_keys_dict = {
             "wanikani": input("Enter wanikani API key: "),
@@ -78,7 +79,7 @@ def get_api_keys() -> dict:
     finally:
         config_file.seek(0)
         config_file.truncate()
-        json.dump(
+        dump(
             api_keys_dict,
             config_file,
             indent=3,
@@ -90,11 +91,11 @@ def get_api_keys() -> dict:
 
 def remove_key_from_config(key: str):
     with open(_CONFIG_FILE, "r+", encoding='utf-8') as config_file:
-        api_keys_dict = json.load(config_file)
+        api_keys_dict = load(config_file)
         del api_keys_dict[key]
         config_file.seek(0)
         config_file.truncate()
-        json.dump(
+        dump(
             api_keys_dict,
             config_file,
             indent=3,
@@ -109,9 +110,12 @@ def generate_frequent_words(num_of_words: int) -> list[str]:
     :return: List of words in frequency order from the frequency list file
     """
     with open(_FREQUENCY_LIST_FILE, "r", encoding='utf-8') as frequency_list_file:
-        words_list = json.load(frequency_list_file)
+        words_list = load(frequency_list_file)
         if len(words_list) < num_of_words:  # Cap up_to_frequency to the length of word_list
             print("Frequency list doesn't contain %d words. Could only retrieve %d.", (num_of_words, len(words_list)))
             return words_list
         else:
             return words_list[0:num_of_words]
+
+def get_time():
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
