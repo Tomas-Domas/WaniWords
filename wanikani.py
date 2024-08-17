@@ -36,7 +36,9 @@ class WaniKaniHandler:
         :return: List of JSON objects received from the request
         """
         data_array = []
-        next_page = "https://api.wanikani.com/v2/" + endpoint + "?updated_after=2024-08-16T09%3A24%3A18Z" #TODO generate this time format
+        next_page = "https://api.wanikani.com/v2/" + endpoint
+        if "timestamp" in self._data_dictionary:
+            next_page += "?updated_after=" + self._data_dictionary["timestamp"]
 
         while next_page is not None:
             response_json = request(
@@ -75,6 +77,14 @@ class WaniKaniHandler:
         self._download_wanikani_vocabulary()
 
         self._write_cache()
+    
+
+    def _update_data_dictionary(self, key, new_data):
+        if key in self._data_dictionary:
+            self._data_dictionary[key] = self._data_dictionary[key] | new_data
+        else:
+            self._data_dictionary[key] = new_data
+
 
 
     def _download_wanikani_kanji(self) -> None:
@@ -92,7 +102,7 @@ class WaniKaniHandler:
         for kanji in kanji_subjects_list:
             id_to_kanji_dictionary[kanji["id"]] = kanji["data"]["characters"]
 
-        self._data_dictionary["all_kanji_subjects"] = id_to_kanji_dictionary
+        self._update_data_dictionary(key="all_kanji_subjects", new_data=id_to_kanji_dictionary)
         print("Wanikani Kanji Subjects have been updated")
 
 
@@ -111,7 +121,7 @@ class WaniKaniHandler:
         for vocabulary in vocabulary_subjects_list:
             id_to_vocabulary_dictionary[vocabulary["id"]] = vocabulary["data"]["characters"]
 
-        self._data_dictionary["all_vocabulary_subjects"] = id_to_vocabulary_dictionary
+        self._update_data_dictionary(key="all_vocabulary_subjects", new_data=id_to_vocabulary_dictionary)
         print("Wanikani Vocabulary Subjects have been updated")
 
 
@@ -130,8 +140,7 @@ class WaniKaniHandler:
         id_to_srs_dictionary = {}
         for kanji in kanji_assignments_list:
             id_to_srs_dictionary[kanji["data"]["subject_id"]] = kanji["data"]["srs_stage"]
-
-        self._data_dictionary["user_kanji_assignments"] = id_to_srs_dictionary
+        self._update_data_dictionary(key="user_kanji_assignments", new_data=id_to_srs_dictionary)
         print("User Kanji Assignments have been updated")
 
 
@@ -150,8 +159,8 @@ class WaniKaniHandler:
         id_to_srs_dictionary = {}
         for vocabulary in vocabulary_assignments_list:
             id_to_srs_dictionary[vocabulary["data"]["subject_id"]] = vocabulary["data"]["srs_stage"]
-
-        self._data_dictionary["user_vocabulary_assignments"] = id_to_srs_dictionary
+        
+        self._update_data_dictionary(key="user_vocabulary_assignments", new_data=id_to_srs_dictionary)
         print("User Vocabulary Assignments have been updated")
 
 

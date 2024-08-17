@@ -118,4 +118,4 @@ def generate_frequent_words(num_of_words: int) -> list[str]:
             return words_list[0:num_of_words]
 
 def get_time():
-    return datetime.now(timezone.utc).strftime("%a, %d %m %Y %H:%M:%S GMT")
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")

@@ -7,6 +7,7 @@ from tkinter import ttk
 
 def main():
 
+    print(get_time())
     api_keys = get_api_keys()
     starting_values = {
         "word_count": 1000,
