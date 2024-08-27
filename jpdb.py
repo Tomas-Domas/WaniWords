@@ -21,9 +21,11 @@ class JPDBHandler:
             match response_json["error"]:
                 case "bad_key":
                     print("JPDB API Error! JPDB API Key is invalid.")
+                    raise KeyError("Error! JPDB API Key is invalid.")
                 case _:
                     print("JPDB API Error! Error Message: %s." % response_json["error_message"])
-            exit(1)
+                    raise KeyError("JPDB API Error! Error Message: %s." % response_json["error_message"])
+                
 
         return response_json
 
@@ -99,7 +101,7 @@ class JPDBHandler:
             print("Existing %s deck found!" % _WANIWORDS_DECK_NAME)
         except ValueError:
             print("Existing %s deck NOT found! Creating Deck..." % _WANIWORDS_DECK_NAME)
-            waniwords_deck_id = self._create_waniwords_deck(len(deck_names_list)) 
+            waniwords_deck_id = self._create_waniwords_deck() 
 
         vocabulary_ids_list = self._get_vocabulary_ids(words_list)
         self._add_vocabulary_to_deck(waniwords_deck_id, vocabulary_ids_list)

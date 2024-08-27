@@ -58,9 +58,10 @@ class WaniKaniHandler:
                 match response_code:
                     case 401:
                         print("WaniKani API Error! WaniKani API Key is invalid.")
+                        raise KeyError("Error! WaniKani API Key is invalid.")
                     case _:
                         print("WaniKani API Error! Response Code: %d." % response_code)
-                exit(1)
+                        raise KeyError("WaniKani API Error! Response Code: %d." % response_code)
 
         return data_array
 

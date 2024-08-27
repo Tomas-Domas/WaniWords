@@ -12,7 +12,8 @@ def main():
         "wanikani_api_key": api_keys["wanikani"],
         "jpdb_api_key": api_keys["jpdb"],
         "word_count": 1000,
-        "checkboxes": [True, True, True]
+        "checkboxes": [True, True, True],
+        "status": ""
     }
 
     def generate_button_function():
@@ -20,12 +21,18 @@ def main():
             "wanikani": wk_key_string.get(),
             "jpdb": jpdb_key_string.get()
         })
+
         wk_handler = WaniKaniHandler(wk_key_string.get())
         jpdb_handler = JPDBHandler(jpdb_key_string.get())
         
         # print("Generating Frequency List file from database...")
         # generate_frequency_list_file()  # Regenerate file from the database
-        wk_handler.download_all_data()  # Download data from wanikani and write to cache file
+        try:
+            wk_handler.download_all_data()  # Download data from wanikani and write to cache file
+        except KeyError as e:
+            status_string.set(e.args[0])
+            status_label.configure(foreground="#F00")
+            return
 
         words_list = generate_frequent_words(wordcount_int.get())
 
@@ -50,9 +57,15 @@ def main():
         print()
 
         print("Adding words to JPDB deck...")
-        jpdb_handler.add_vocabulary_to_waniwords_deck(words_list)
-
+        try:
+            jpdb_handler.add_vocabulary_to_waniwords_deck(words_list)
+        except KeyError as e:
+            status_string.set(e.args[0])
+            status_label.configure(foreground="#F00")
+            return
         print("Finished!")
+        status_string.set("Finished! Generated JPDB deck of %d words to study!" % len(words_list))
+        status_label.configure(foreground="")
 
     # Window
     window = Tk()
@@ -95,7 +108,12 @@ def main():
         checkbox_variable_list.append(BooleanVar(value=checkbox_value))
         ttk.Checkbutton(master=window, text=checkbox_label, variable=checkbox_variable_list[-1]).pack()
     
-    ttk.Button(master=window, text="Generate", command=generate_button_function).pack(pady=30)
+    ttk.Button(master=window, text="Generate", command=generate_button_function).pack(pady=20)
+
+    # Status widget
+    status_string = StringVar(value=starting_values["status"])
+    status_label = ttk.Label(master=window, textvariable=status_string, foreground="#F00")
+    status_label.pack()
 
     # Run
     window.mainloop()
