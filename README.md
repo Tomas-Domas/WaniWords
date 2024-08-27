@@ -5,11 +5,14 @@ This project is designed for WaniKani users to maximize their kanji learning by 
 ## Features
 
 - Easy to use (though a bit ugly) GUI
-- Locally cache user's API keys and WaniKani user data for repeated use
+- Locally cache user's API Tokens and WaniKani user data for repeated use
 - Create lists of words, filtered with various criteria
+    - Database is sourced from [tsukubawebcorpus](https://tsukubawebcorpus.jp/en/) and [NINJAL](https://repository.ninjal.ac.jp/records/3234)
 - Generate a vocabulary deck on jpdb.io for studying
 
 ## How To Use
 
-- Requirements: requests (install using "pip install requests")
-- Download source code and run main.py ("python3 main.py")
+Requirements: requests (install using "pip install requests")
+Download source code and run main.py ("python3 main.py")
+Enter the API Tokens for WaniKani (User Icon -> API Tokens) and JPDB (Settings -> Account information)
+Customize and generate a study deck!
