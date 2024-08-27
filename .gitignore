@@ -1,4 +1,6 @@
 config.json
 WaniKani_Cache.json
+NLT1.40_freq_list.csv
+BCCWJ_frequencylist_suw_ver1_0.tsv
 /venv
 /__pycache__
