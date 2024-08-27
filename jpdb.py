@@ -1,8 +1,6 @@
 from sys import exit
 from requests import request
 
-from waniwords_utility import remove_key_from_config
-
 _WANIWORDS_DECK_NAME = "WaniWords"
 
 class JPDBHandler:
@@ -23,7 +21,6 @@ class JPDBHandler:
             match response_json["error"]:
                 case "bad_key":
                     print("JPDB API Error! JPDB API Key is invalid.")
-                    remove_key_from_config("jpdb")
                 case _:
                     print("JPDB API Error! Error Message: %s." % response_json["error_message"])
             exit(1)

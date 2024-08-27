@@ -2,7 +2,7 @@ from sys import exit
 from json import load, dump, decoder
 from requests import request
 
-from waniwords_utility import remove_key_from_config, get_time, KANA_LIST
+from waniwords_utility import get_time, KANA_LIST
 
 _WANIKANI_CACHE_FILE = "WaniKani_Cache.json"
 
@@ -58,7 +58,6 @@ class WaniKaniHandler:
                 match response_code:
                     case 401:
                         print("WaniKani API Error! WaniKani API Key is invalid.")
-                        remove_key_from_config("wanikani")
                     case _:
                         print("WaniKani API Error! Response Code: %d." % response_code)
                 exit(1)

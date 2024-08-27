@@ -72,6 +72,7 @@ def generate_frequency_list_file() -> None:
     list_of_words = []
     for entry in list_of_entries:
         for blacklisted_entry in list_of_blacklisted_entries:
+            # If candidate matches a blacklisted entry's lemma and reading, don't add it
             if entry[0] == blacklisted_entry[0] and entry[1] == blacklisted_entry[1]:
                 break
         else:
@@ -86,57 +87,25 @@ def generate_frequency_list_file() -> None:
         )
     
 
-def get_api_keys() -> dict:
-    api_keys_dict = {}
+def read_config_file() -> dict:
+    api_keys_dict = {
+            "wanikani": "",
+            "jpdb":     ""
+        }
     try:
-        config_file = open(_API_CONFIG_FILE, "r+", encoding='utf-8')
-        api_keys_dict = load(config_file)
-        if ("wanikani" not in api_keys_dict) and ("jpdb" not in api_keys_dict):
-            raise KeyError("wanikani", "jpdb")
-        if "wanikani" not in api_keys_dict:
-            raise KeyError("wanikani")
-        if "jpdb" not in api_keys_dict:
-            raise KeyError("jpdb")
-
-    except KeyError as key_error:
-        for missing_key in key_error.args:
-            print("Missing %s key from config..." % missing_key)
-            api_keys_dict[missing_key] = input("Enter %s API key: " % missing_key)
-
+        with open(_API_CONFIG_FILE, "r", encoding='utf-8') as config_file:
+            api_keys_dict |= load(config_file)  # overwrite empty keys in dict with those from file
     except FileNotFoundError:
         print("Creating new config file...")
-        config_file = open(_API_CONFIG_FILE, "x", encoding='utf-8')
-        api_keys_dict = {
-            "wanikani": input("Enter wanikani API key: "),
-            "jpdb":     input("Enter jpdb API key: ")
-        }
-
     except decoder.JSONDecodeError:
         print("Error decoding config file...")
-        api_keys_dict = {
-            "wanikani": input("Enter wanikani API key: "),
-            "jpdb":     input("Enter jpdb API key: ")
-        }
-
     finally:
-        config_file.seek(0)
-        config_file.truncate()
-        dump(
-            api_keys_dict,
-            config_file,
-            indent=3,
-            ensure_ascii=False
-        )
-        config_file.close()
+        write_config_file(api_keys_dict)
         return api_keys_dict
 
 
-def remove_key_from_config(key: str):
-    with open(_API_CONFIG_FILE, "r+", encoding='utf-8') as config_file:
-        api_keys_dict = load(config_file)
-        del api_keys_dict[key]
-        config_file.seek(0)
-        config_file.truncate()
+def write_config_file(api_keys_dict: dict) -> None:
+    with open(_API_CONFIG_FILE, "w", encoding='utf-8') as config_file:
         dump(
             api_keys_dict,
             config_file,
