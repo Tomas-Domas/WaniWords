@@ -1,4 +1,3 @@
-from sys import exit
 from json import load, dump, decoder
 from requests import request
 

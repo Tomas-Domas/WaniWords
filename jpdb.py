@@ -1,7 +1,4 @@
-from sys import exit
 from requests import request
-
-_WANIWORDS_DECK_NAME = "WaniWords"
 
 class JPDBHandler:
     def __init__(self, api_token):
@@ -70,11 +67,11 @@ class JPDBHandler:
         return deck_names_list, deck_ids_list
 
 
-    def _create_waniwords_deck(self, deck_position: int = 0) -> int:
+    def _create_deck(self, deck_name: str, deck_position: int = 0) -> int:
         deck_dictionary = self._call_api(
             endpoint="deck/create-empty",
             json={
-                "name": _WANIWORDS_DECK_NAME,
+                "name": deck_name,
                 "position": deck_position
             }
         )
@@ -92,16 +89,16 @@ class JPDBHandler:
         )
 
 
-    def add_vocabulary_to_waniwords_deck(self, words_list):
+    def add_vocabulary_to_waniwords_deck(self, words_list, deck_name):
         deck_names_list, deck_ids_list = self._get_decks()
 
         try:
-            waniwords_deck_index = deck_names_list.index(_WANIWORDS_DECK_NAME)
+            waniwords_deck_index = deck_names_list.index(deck_name)
             waniwords_deck_id = deck_ids_list[waniwords_deck_index]
-            print("Existing %s deck found!" % _WANIWORDS_DECK_NAME)
+            print("Existing \"%s\" deck found!" % deck_name)
         except ValueError:
-            print("Existing %s deck NOT found! Creating Deck..." % _WANIWORDS_DECK_NAME)
-            waniwords_deck_id = self._create_waniwords_deck() 
+            print("Existing \"%s\" deck NOT found! Creating Deck..." % deck_name)
+            waniwords_deck_id = self._create_deck(deck_name=deck_name) 
 
         vocabulary_ids_list = self._get_vocabulary_ids(words_list)
         self._add_vocabulary_to_deck(waniwords_deck_id, vocabulary_ids_list)

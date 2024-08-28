@@ -12,8 +12,18 @@ def main():
         "wanikani_api_key": api_keys["wanikani"],
         "jpdb_api_key": api_keys["jpdb"],
         "word_count": 1000,
-        "checkboxes": [True, True, True],
-        "status": ""
+        "checkbox_values": [
+            True, 
+            True, 
+            True
+        ],
+        "checkbox_labels": [
+            "Remove WaniKani learned vocab",
+            "Remove vocab with unknown kanji",
+            "Remove kana-only vocab"
+        ],
+        "deck_name": "WaniWords",
+        "status": "Input both API Keys to begin!"
     }
 
     def generate_button_function():
@@ -58,7 +68,7 @@ def main():
 
         print("Adding words to JPDB deck...")
         try:
-            jpdb_handler.add_vocabulary_to_waniwords_deck(words_list)
+            jpdb_handler.add_vocabulary_to_waniwords_deck(words_list, deck_name_string.get())
         except KeyError as e:
             status_string.set(e.args[0])
             status_label.configure(foreground="#F00")
@@ -96,23 +106,25 @@ def main():
     ttk.Entry(master=wordcount_frame, textvariable=wordcount_int).pack(side="left")
     wordcount_frame.pack()
 
-    checkbox_label_list = [
-        "Remove WaniKani learned vocab",
-        "Remove vocab with unknown kanji",
-        "Remove kana-only vocab"
-    ]
     checkbox_variable_list = []
+    checkbox_label_list = starting_values["checkbox_labels"]
     for i in range(len(checkbox_label_list)):
         checkbox_label = checkbox_label_list[i]
-        checkbox_value = starting_values["checkboxes"][i]
+        checkbox_value = starting_values["checkbox_values"][i]
         checkbox_variable_list.append(BooleanVar(value=checkbox_value))
         ttk.Checkbutton(master=window, text=checkbox_label, variable=checkbox_variable_list[-1]).pack()
     
-    ttk.Button(master=window, text="Generate", command=generate_button_function).pack(pady=20)
+    deck_name_frame = ttk.Frame(master=window)
+    deck_name_string = StringVar(value=starting_values["deck_name"])
+    ttk.Label(master=deck_name_frame, text="Name of deck to generate", font="Calibri 15").pack(side="left", padx=5, pady=10)
+    ttk.Entry(master=deck_name_frame, textvariable=deck_name_string).pack(side="left")
+    deck_name_frame.pack()
+    
+    ttk.Button(master=window, text="Generate", command=generate_button_function).pack(pady=15)
 
     # Status widget
     status_string = StringVar(value=starting_values["status"])
-    status_label = ttk.Label(master=window, textvariable=status_string, foreground="#F00")
+    status_label = ttk.Label(master=window, textvariable=status_string)
     status_label.pack()
 
     # Run
