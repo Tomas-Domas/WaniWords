@@ -71,12 +71,19 @@ def generate_frequency_list_file() -> None:
     # Only add words to final list if they don't match the blacklist from BCCWJ
     list_of_words = []
     for entry in list_of_entries:
+        word_lemma = entry[0]
         for blacklisted_entry in list_of_blacklisted_entries:
             # If candidate matches a blacklisted entry's lemma and reading, don't add it
-            if entry[0] == blacklisted_entry[0] and entry[1] == blacklisted_entry[1]:
+            if word_lemma == blacklisted_entry[0] and entry[1] == blacklisted_entry[1]:
                 break
         else:
-            list_of_words.append(entry[0])
+            # # Remove the する part of "suru verbs"
+            if word_lemma != "する" and word_lemma[-2:] == "する":
+                word_lemma = word_lemma[:-2]
+            # Finally add to list if not a duplicate
+            if word_lemma not in list_of_words:
+                list_of_words.append(word_lemma)
+
 
     # Write output database file
     with open(_FREQUENCY_LIST_FILE, "w", encoding='utf-8') as frequency_list_file:
