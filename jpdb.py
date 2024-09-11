@@ -5,14 +5,18 @@ class JPDBHandler:
         self._api_token = api_token
 
     def _call_api(self, endpoint: str, json: dict):
-        response_json = request(
-            method="POST",
-            url="https://jpdb.io/api/v1/" + endpoint,
-            headers={
-                "Authorization": "Bearer " + self._api_token
-            },
-            json=json,
-        ).json()
+        try:
+            response_json = request(
+                method="POST",
+                url="https://jpdb.io/api/v1/" + endpoint,
+                headers={
+                    "Authorization": "Bearer " + self._api_token
+                },
+                json=json,
+            ).json()
+        except:  # I know, I know... I am sorry
+                print("JDPB Request error!")
+                raise ConnectionError("Error! JDPB API Connection failed. Check your internet connection?")
 
         if "error" in response_json:
             match response_json["error"]:

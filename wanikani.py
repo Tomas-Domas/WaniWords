@@ -40,14 +40,18 @@ class WaniKaniHandler:
             next_page += "?updated_after=" + self._data_dictionary["timestamp"]
 
         while next_page is not None:
-            response_json = request(
-                method="GET",
-                url=next_page,
-                headers={
-                    "Authorization": "Bearer " + self._api_token
-                },
-                params=parameters
-            ).json()
+            try:
+                response_json = request(
+                    method="GET",
+                    url=next_page,
+                    headers={
+                        "Authorization": "Bearer " + self._api_token
+                    },
+                    params=parameters
+                ).json()
+            except:  # I know, I know... I am sorry
+                print("WaniKani Request error!")
+                raise ConnectionError("Error! WaniKani API Connection failed. Check your internet connection?")
             try:
                 data_array += response_json["data"]
                 parameters = None

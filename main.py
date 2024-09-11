@@ -7,6 +7,9 @@ from tkinter import ttk
 
 def main():
 
+    # print("Generating Frequency List file from database...")
+    # generate_frequency_list_file()  # Regenerate file from the database
+
     api_keys = read_config_file()
     starting_values = {
         "wanikani_api_key": api_keys["wanikani"],
@@ -35,11 +38,9 @@ def main():
         wk_handler = WaniKaniHandler(wk_key_string.get())
         jpdb_handler = JPDBHandler(jpdb_key_string.get())
         
-        # print("Generating Frequency List file from database...")
-        # generate_frequency_list_file()  # Regenerate file from the database
         try:
             wk_handler.download_all_data()  # Download data from wanikani and write to cache file
-        except KeyError as e:
+        except (KeyError, ConnectionError) as e:
             status_string.set(e.args[0])
             status_label.configure(foreground="#F00")
             return
@@ -69,7 +70,7 @@ def main():
         print("Adding words to JPDB deck...")
         try:
             jpdb_handler.add_vocabulary_to_waniwords_deck(words_list, deck_name_string.get())
-        except KeyError as e:
+        except (KeyError, ConnectionError) as e:
             status_string.set(e.args[0])
             status_label.configure(foreground="#F00")
             return
