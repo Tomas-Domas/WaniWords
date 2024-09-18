@@ -1,4 +1,4 @@
-from waniwords_utility import read_config_file, write_config_file, generate_frequent_words, generate_frequency_list_file, get_time
+from waniwords_utility import read_config_file, write_config_file, generate_frequent_words, generate_frequency_list_file, get_time, print_list
 from wanikani import WaniKaniHandler
 from jpdb import JPDBHandler
 from tkinter import *
@@ -39,7 +39,7 @@ def main():
         jpdb_handler = JPDBHandler(jpdb_key_string.get())
         
         try:
-            wk_handler.download_all_data()  # Download data from wanikani and write to cache file
+            wk_handler.download_all_data()  # Download data from wanikani
         except (KeyError, ConnectionError) as e:
             status_string.set(e.args[0])
             status_label.configure(foreground="#F00")
@@ -63,20 +63,18 @@ def main():
             print(len(words_list), "words remaining.")
 
         print("Generated list:")
-        for word in words_list:
-            print(word, end="\t")
-        print()
+        print_list(words_list)
 
         print("Adding words to JPDB deck...")
         try:
             jpdb_handler.add_vocabulary_to_waniwords_deck(words_list, deck_name_string.get())
+            print("Finished!")
+            status_string.set("Finished! Generated JPDB deck of %d words to study!" % len(words_list))
+            status_label.configure(foreground="")
         except (KeyError, ConnectionError) as e:
             status_string.set(e.args[0])
             status_label.configure(foreground="#F00")
-            return
-        print("Finished!")
-        status_string.set("Finished! Generated JPDB deck of %d words to study!" % len(words_list))
-        status_label.configure(foreground="")
+
 
     # Window
     window = Tk()
@@ -130,6 +128,23 @@ def main():
 
     # Run
     window.mainloop()
+
+
+def tester_main():
+    
+    api_keys = read_config_file()
+    wk_handler = WaniKaniHandler(api_keys["wanikani"])
+    jpdb_handler = JPDBHandler(api_keys["jpdb"])
+
+    wk_handler.download_all_data()
+    words_list = generate_frequent_words(2000)
+    words_list = wk_handler.filter_out_known_words(words_list)
+    words_list = wk_handler.filter_out_kana_words(words_list)
+    words_list = wk_handler.filter_out_unknown_kanji(words_list)
+    print_list(words_list)
+
+    jpdb_handler.add_vocabulary_to_waniwords_deck(words_list)
+
 
 if __name__ == "__main__":
     main()

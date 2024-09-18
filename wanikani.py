@@ -245,6 +245,7 @@ class WaniKaniHandler:
                 new_list_of_words.append(word)    
         return new_list_of_words
     
+
     def filter_out_kana_words(self, list_of_words: list[str]) -> list[str]:
         """
         Removes words from the list that contain kana-only words.

@@ -135,5 +135,13 @@ def generate_frequent_words(num_of_words: int) -> list[str]:
         else:
             return words_list[0:num_of_words]
 
-def get_time():
+def get_time() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+def print_list(words_list: list[str]) -> None:
+    for word in words_list:
+        if len(word) <= 3:
+            print(word + "\t\t", end='')
+        else:
+            print(word + "\t", end='')
+    print()
