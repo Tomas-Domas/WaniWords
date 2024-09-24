@@ -131,7 +131,6 @@ def main():
 
 
 def tester_main():
-    
     api_keys = read_config_file()
     wk_handler = WaniKaniHandler(api_keys["wanikani"])
     jpdb_handler = JPDBHandler(api_keys["jpdb"])
@@ -146,5 +145,20 @@ def tester_main():
     jpdb_handler.add_vocabulary_to_waniwords_deck(words_list)
 
 
+def jpdb_fix_main():
+    api_keys = read_config_file()
+    jpdb_handler = JPDBHandler(api_keys["jpdb"])
+
+    words_list = generate_frequent_words(1000)
+    vocabulary_ids_list = jpdb_handler._get_vocabulary_ids(words_list)
+    processed_words_list = jpdb_handler._get_vocabulary_spellings(vocabulary_ids_list)
+    print("ORIGINAL ===============================")
+    for i in words_list:
+        print(i)
+    print("NEW ====================================")
+    for i in processed_words_list:
+        print(i)
+
+
 if __name__ == "__main__":
-    main()
+    jpdb_fix_main()
