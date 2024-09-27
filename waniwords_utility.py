@@ -22,7 +22,7 @@ KANA_LIST = [
 ]
 
 
-def generate_frequency_list_file() -> None:
+def generate_frequency_list_file(jpdb_handler) -> None:
     """
     Generate a Frequency List file from the NLT database, and refine it with the BCCWJ database 
     Excludes words of a blacklisted type or that contain a blacklisted symbol 
@@ -46,8 +46,8 @@ def generate_frequency_list_file() -> None:
             else:
                 word_count += 1
                 list_of_entries.append((word_lemma, word_reading))
-            # Stop at ~50,000 words so it's not a huge file
-            if word_count == 51000:
+            # Stop at ~50k words so it's not a huge file
+            if word_count == 51_000:
                 break
     
     # Generate blacklist from BCCWJ
@@ -65,7 +65,8 @@ def generate_frequency_list_file() -> None:
                 if blacklisted_type in word_type:
                     list_of_blacklisted_entries.append((word_lemma, word_reading))
                     break
-            if word_count == 70000:
+            # Stop at 70k to be reasonably sure all 50k from initial list are covered
+            if word_count == 70_000:
                 break
     
     # Only add words to final list if they don't match the blacklist from BCCWJ
@@ -83,12 +84,25 @@ def generate_frequency_list_file() -> None:
             # Finally add to list if not a duplicate
             if word_lemma not in list_of_words:
                 list_of_words.append(word_lemma)
-
+    
+    # Pass list through JPDB's word recognition system
+    vocabulary_ids_list = []
+    batch_size = 1000
+    # Pass words in batches to not overload API
+    for i in range(0, len(list_of_words), batch_size):
+        print("Batch: [%d, %d]" % (i, i+batch_size))
+        list_of_words_slice = list_of_words[i:i+batch_size]
+        # Only add if not already in a previous batch
+        for vocab in jpdb_handler._get_vocabulary_ids(list_of_words_slice):
+            if vocab not in vocabulary_ids_list:
+                vocabulary_ids_list.append(vocab)
+    list_of_words = jpdb_handler._get_vocabulary_spellings(vocabulary_ids_list)
 
     # Write output database file
+    print("Writing File")
     with open(_FREQUENCY_LIST_FILE, "w", encoding='utf-8') as frequency_list_file:
         dump(
-            list_of_words[1:],
+            list_of_words,
             frequency_list_file,
             indent=0
         )

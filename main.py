@@ -145,22 +145,5 @@ def tester_main():
     jpdb_handler.add_vocabulary_to_waniwords_deck(words_list)
 
 
-def jpdb_fix_main():
-    api_keys = read_config_file()
-    jpdb_handler = JPDBHandler(api_keys["jpdb"])
-
-    generated_words_list = generate_frequent_words(2_000)
-    vocabulary_ids_list = jpdb_handler._get_vocabulary_ids(generated_words_list)
-    processed_words_list = jpdb_handler._get_vocabulary_spellings(vocabulary_ids_list)
-    print("REMOVED ===============================")
-    for i in generated_words_list:
-        if i not in processed_words_list:
-            print(i)
-    print("ADDED ====================================")
-    for i in processed_words_list:
-        if i not in generated_words_list:
-            print(i)
-
-
 if __name__ == "__main__":
     jpdb_fix_main()
