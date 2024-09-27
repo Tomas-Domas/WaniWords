@@ -98,8 +98,6 @@ class JPDBHandler:
         return (word_ids_only_in_new, word_ids_only_in_old)
         
 
-
-    
     def _get_deck_vocabulary(self, deck_id: int) -> list[int]:
         vocabulary_ids_dictionary = self._call_api(
             endpoint="deck/list-vocabulary",

@@ -131,13 +131,12 @@ def main():
 
 
 def tester_main():
-    
     api_keys = read_config_file()
     wk_handler = WaniKaniHandler(api_keys["wanikani"])
     jpdb_handler = JPDBHandler(api_keys["jpdb"])
 
     wk_handler.download_all_data()
-    words_list = generate_frequent_words(2000)
+    words_list = generate_frequent_words(2_000)
     words_list = wk_handler.filter_out_known_words(words_list)
     words_list = wk_handler.filter_out_kana_words(words_list)
     words_list = wk_handler.filter_out_unknown_kanji(words_list)
@@ -147,4 +146,4 @@ def tester_main():
 
 
 if __name__ == "__main__":
-    main()
+    jpdb_fix_main()
