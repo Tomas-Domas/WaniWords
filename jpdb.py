@@ -134,7 +134,7 @@ class JPDBHandler:
         )
 
 
-    def add_vocabulary_to_waniwords_deck(self, words_list: list[str], deck_name: str = "WaniWords") -> None:
+    def add_vocabulary_to_waniwords_deck(self, words_list: list[str], deck_name: str = "WaniWords") -> int:
         vocabulary_ids_list = self._get_vocabulary_ids(words_list)
         deck_names_list, deck_ids_list = self._get_decks()
         try:  # Get the deck id of the WaniWords deck from the list of decks
@@ -155,3 +155,4 @@ class JPDBHandler:
             print_list(self._get_vocabulary_spellings(obsolete_word_ids))
 
         self._add_vocabulary_to_deck(waniwords_deck_id, new_word_ids)
+        return len(new_word_ids)

@@ -67,9 +67,9 @@ def main():
 
         print("Adding words to JPDB deck...")
         try:
-            jpdb_handler.add_vocabulary_to_waniwords_deck(words_list, deck_name_string.get())
+            added_words = jpdb_handler.add_vocabulary_to_waniwords_deck(words_list, deck_name_string.get())
             print("Finished!")
-            status_string.set("Finished! Generated JPDB deck of %d words to study!" % len(words_list))
+            status_string.set("Finished! Generated JPDB deck of %d new words to study!" % added_words)
             status_label.configure(foreground="")
         except (KeyError, ConnectionError) as e:
             status_string.set(e.args[0])
@@ -146,4 +146,4 @@ def tester_main():
 
 
 if __name__ == "__main__":
-    jpdb_fix_main()
+    main()
